@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/stalker8610/d2lm#readme",
   "dependencies": {
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "fs": "^0.0.1-security"
   }
 }

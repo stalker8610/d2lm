@@ -1,17 +1,33 @@
+
+let https;
+try {
+  https = require('https');
+} catch (err) {
+  console.log('https support is disabled!');
+  process.exit(1);
+}
+
 const express = require('express');
-const https = require('https');
 const fs = require('fs');
 
 var app = express();
 
 app.use(express.static('static'))
 
-/* const options = {
-    key: fs
-} */
+    let keyPath = 'key.pem';
+    let certPath = 'cert.pem';
 
-app.use('/', (req, res)=>{
+ const options = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
+ }
+
+ app.use('/', (req, res)=>{
     res.send('OK');
 })
 
-app.listen(80);
+
+ https.createServer(options, app).listen(443);
+
+
+
