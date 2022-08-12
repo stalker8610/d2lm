@@ -14,8 +14,8 @@ var app = express();
 
 app.use(express.static('static'))
 
-    let keyPath = 'key.pem';
-    let certPath = 'cert.pem';
+    let keyPath = '/etc/letsencrypt/live/d2lm.ru/privkey.pem';
+    let certPath = '/etc/letsencrypt/live/d2lm.ru/fullchain.pem';
 
  const options = {
     key: fs.readFileSync(keyPath),
