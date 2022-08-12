@@ -1,0 +1,22 @@
+{
+  "name": "d2lm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stalker8610/d2lm.git"
+  },
+  "author": "Voronin Anton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stalker8610/d2lm/issues"
+  },
+  "homepage": "https://github.com/stalker8610/d2lm#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
