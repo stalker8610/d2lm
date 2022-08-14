@@ -12,6 +12,8 @@ const fs = require('fs');
 
 var app = express();
 
+app.set('view engine', 'pug');
+
 app.use(express.static('static'))
 
     let keyPath = '/etc/letsencrypt/live/d2lm.ru/privkey.pem';
@@ -23,7 +25,7 @@ app.use(express.static('static'))
  }
 
  app.use('/', (req, res)=>{
-    res.send('OK');
+    res.render('auth');
 })
 
 
