@@ -20,7 +20,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   secret: 'dd9s02a2f9dsa',
-  cookie: { secure: true }
+  cookie: { secure: true, sameSite: 'lax' }
 }));
 
 let keyPath = '/etc/letsencrypt/live/d2lm.ru/privkey.pem';
@@ -67,7 +67,7 @@ app.get('/auth', (req, res) => {
 
 app.get('/logout', (req, res)=>{
 
-  req.session.destroy(()=>{
+   req.session.regenerate(()=>{
     res.status(200).send('Logout done successfully');
   });
 
