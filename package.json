@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "run": "node index.js",
+    "debug": "node inspect --port=9230 index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,6 +20,7 @@
   "homepage": "https://github.com/stalker8610/d2lm#readme",
   "dependencies": {
     "express": "^4.18.1",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "pug": "^3.0.2"
   }
 }
