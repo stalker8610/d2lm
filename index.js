@@ -8,9 +8,8 @@ try {
 }
 
 const client_id = 41031;
-
 const express = require('express');
-const session = require('express-sesion');
+const session = require('express-session');
 const fs = require('fs');
 
 var app = express();
@@ -34,15 +33,15 @@ const options = {
 
 app.use(express.urlencoded())
 
-app.use('/auth', (req, res) => {
+app.get('/auth', (req, res) => {
 
-  if (req.params.state && decodeURIComponent(req.params.state) == req.sessionID) {
+  if (req.query.state && decodeURIComponent(req.query.state) == req.sessionID) {
 
-    if (req.params.code) {
+    if (req.query.code) {
 
-      console.log(`Got authorization code = ${req.params.code}`);
+      console.log(`Got authorization code = ${req.query.code}`);
 
-      getToken(req.params.code, (response) => {
+      getToken(req.query.code, (response) => {
         console.log(`Got authorization token: \n\r${response}`)
         req.session.token = response.access_token;
         res.render('main', {token: response.access_token})
@@ -50,9 +49,9 @@ app.use('/auth', (req, res) => {
       
     }
 
-    else if (req.params.error) {
-      console.log(`Got error while authorization: ${req.params.error}`,);
-      res.status(503).send(`Error while authorization: ${req.params.error}`);
+    else if (req.query.error) {
+      console.log(`Got error while authorization: ${req.query.error}`,);
+      res.status(503).send(`Error while authorization: ${req.query.error}`);
     }
 
     else {
@@ -66,7 +65,15 @@ app.use('/auth', (req, res) => {
 
 })
 
-app.use('/', (req, res) => {
+app.get('/logout', (req, res)=>{
+
+  req.session.destroy(()=>{
+    res.status(200).send('Logout done successfully');
+  });
+
+});
+
+app.get('/', async (req, res) => {
 
   if (!req.sessionID) {
     await req.session.regenerate();
@@ -109,9 +116,6 @@ function getToken(code, fn) {
     .then(fn(response));
 
 }
-
-function makeRequest(req)
-
 
 https.createServer(options, app).listen(443);
 
