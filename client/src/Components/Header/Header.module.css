@@ -1,0 +1,29 @@
+
+
+.header {
+    
+    grid-area: h;
+
+    display: grid;
+    grid-template-areas: "hl hb";
+    grid-template-columns: 10fr 1fr;
+    
+    background-color: darkslateblue;
+    padding-top: 10px;
+ 
+  
+}
+
+.headerLogo{
+
+    grid-area: hl;
+
+    text-align: center;
+
+}
+
+.headerButton{
+
+    grid-area: hb;
+
+}
