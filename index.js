@@ -13,6 +13,7 @@ const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const path = require('path');
 
 var app = express();
 
@@ -95,7 +96,9 @@ app.get('/logout', (req, res) => {
 
 app.get('*', async (req, res) => {
 
-  if (!req.sessionID) {
+ console.log('get in *');
+ 
+ if (!req.sessionID) {
     await req.session.regenerate();
   }
 
@@ -114,6 +117,7 @@ app.get('*', async (req, res) => {
 
 function getAuthUrl(state) {
 
+	console.log('getAuthUrl');
   return `https://www.bungie.net/ru/OAuth/Authorize?response_type=code&client_id=${client_id}&state=${encodeURIComponent(state)}`;
 
 }
@@ -138,7 +142,7 @@ function getToken(code, fn) {
 
 }
 
-https.createServer(options, app).listen(443);
+https.createServer(options, app).listen(443, ()=> console.log(`Server started at port 443`));
 
 
 
