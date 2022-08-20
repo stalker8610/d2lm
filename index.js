@@ -8,9 +8,11 @@ try {
 }
 
 const client_id = 41031;
+const { urlencoded } = require('express');
 const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 var app = express();
 
@@ -33,7 +35,20 @@ const options = {
 
 app.use(express.urlencoded())
 
-app.get('/auth', (req, res) => {
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+app.get('/getAuthUrl', (req, res) => {
+
+  res.status(200).send(getAuthUrl(req.sessionID));
+
+  // if (req.hostname.localeCompare("d2lm.ru")) {
+  //   res.status(200).send(getAuthUrl(req.sessionID));
+  // }
+  // else res.end();
+
+})
+
+app.get('/auth', (req, res, next) => {
 
   if (req.query.state && decodeURIComponent(req.query.state) == req.sessionID) {
 
@@ -42,53 +57,59 @@ app.get('/auth', (req, res) => {
       console.log(`Got authorization code = ${req.query.code}`);
 
       getToken(req.query.code, (response) => {
-        console.log(`Got authorization token: \n\r${response}`)
+        console.log(`Got authorization token: \n\r${JSON.stringify(response)}`)
         req.session.token = response.access_token;
-        res.render('main', {token: response.access_token})
+        //res.render('main', { token: response.access_token })
+        res.redirect(`/?sessionId=${urlencoded(req.sessionID)}`);
       })
-      
+
     }
 
     else if (req.query.error) {
       console.log(`Got error while authorization: ${req.query.error}`,);
-      res.status(503).send(`Error while authorization: ${req.query.error}`);
+      res.redirect(`/?authError=${urlencoded(req.query.error)}`);
+      //res.status(503).send(`Error while authorization: ${req.query.error}`);
     }
 
     else {
       console.log(`Unexpected server behavior`);
-      res.status(500).send(`Some unexpected error`);
+      res.redirect(`/?authError=${urlencoded("Unexpected server behavior")}}`);
+      //res.status(500).send(`Some unexpected error`);
     }
 
   }
 
-  else res.redirect('/');
+  else 
+    res.redirect('/');
+    //next();
 
 })
 
-app.get('/logout', (req, res)=>{
+app.get('/logout', (req, res) => {
 
-   req.session.regenerate(()=>{
+  req.session.regenerate(() => {
     res.status(200).send('Logout done successfully');
   });
 
 });
 
-app.get('/', async (req, res) => {
+app.get('*', async (req, res) => {
 
   if (!req.sessionID) {
     await req.session.regenerate();
   }
 
-  if (req.session.token) {
-    //authorized user
-    //res.send('Authorized user with token ' + req.session.token);
-    res.render('main', {token: req.session.token});
-  }
-  else {
-    res.render('auth', { authUrl: getAuthUrl(req.sessionID) });
-  }
+  // if (req.session.token) {
+  //   //authorized user
+  //   //res.send('Authorized user with token ' + req.session.token);
+  //   res.render('main', { token: req.session.token });
+  // }
+  // else {
+  //   res.render('auth', { authUrl: getAuthUrl(req.sessionID) });
+  // }
 
 })
+
 
 
 function getAuthUrl(state) {
@@ -113,7 +134,7 @@ function getToken(code, fn) {
 
   fetch(urlGetToken, options)
     .then(response => response.json())
-    .then(fn(response));
+    .then(responseJSON => fn(responseJSON));
 
 }
 
