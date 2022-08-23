@@ -36,7 +36,7 @@ const options = {
 
 app.use(express.urlencoded())
 
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.static(path.join(__dirname, 'client')));
 
 app.get('/getAuthUrl', (req, res) => {
 
@@ -94,7 +94,7 @@ app.get('/logout', (req, res) => {
 
 });
 
-app.get('*', async (req, res) => {
+app.get('*', async (req, res, next) => {
 
  console.log('get in *');
  
@@ -111,6 +111,7 @@ app.get('*', async (req, res) => {
   //   res.render('auth', { authUrl: getAuthUrl(req.sessionID) });
   // }
 
+  res.sendFile(path.join(__dirname, 'client/public/index.html'));
 })
 
 
@@ -118,7 +119,7 @@ app.get('*', async (req, res) => {
 function getAuthUrl(state) {
 
 	console.log('getAuthUrl');
-  return `https://www.bungie.net/ru/OAuth/Authorize?response_type=code&client_id=${client_id}&state=${encodeURIComponent(state)}`;
+  return { authUrl: `https://www.bungie.net/ru/OAuth/Authorize?response_type=code&client_id=${client_id}&state=${encodeURIComponent(state)}`};
 
 }
 
