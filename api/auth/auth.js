@@ -9,7 +9,7 @@ const BUNGIE_AUTH_URL = "https://www.bungie.net/ru/OAuth/Authorize"
 const BUNGIE_TOKEN_URL = "https://www.bungie.net/Platform/App/OAuth/token"
 
 
-export function getAuthUrl(state) {
+function getAuthUrl(state) {
 
     const authUrl = `${BUNGIE_AUTH_URL}?response_type=code&client_id=${BUNGIE_CLIENT_ID}&state=${encodeURIComponent(state)}`;
     return authUrl;
@@ -107,4 +107,4 @@ authRouter.get('/logout', (req, res) => {
 
 });
 
-export default authRouter;
+module.exports = { getAuthUrl, authRouter };

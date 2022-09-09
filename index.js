@@ -6,11 +6,11 @@ try {
     process.exit(1);
 }
 
-const { urlencoded, express } = require('express');
+const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
-import { authRouter, getAuthUrl} from './api/auth/auth';
+const { authRouter, getAuthUrl } = require('./api/auth/auth');
 
 var app = express();
 
@@ -47,7 +47,7 @@ app.get('/login', (req, res)=>{
         req.session.backURL = req.header('Referer') || '/';
     }
 
-    const authUrl = getAuthUrl();
+    const authUrl = authRouter.getAuthUrl();
     console.log(`authUrl = ${authUrl}`);
     res.redirect(authUrl);
 
