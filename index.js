@@ -16,6 +16,7 @@ var app = express();
 
 app.use(session({
     resave: false,
+    
     saveUninitialized: false,
     secret: 'dd9s02a2f9dsa',
     cookie: { secure: true, sameSite: 'lax' }
