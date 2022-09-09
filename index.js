@@ -20,7 +20,8 @@ app.use(session({
     saveUninitialized: false,
     secret: 'dd9s02a2f9dsa',
     cookie: { secure: true, sameSite: 'lax' },
-    store: MongoStore.create({mongoUrl: 'mongodb://localhost:27017'})
+    //store: MongoStore.create({mongoUrl: 'mongodb://admin:abcd@77.223.99.173:27017/d2lm?authSource=admin'})
+    store: MongoStore.create({mongoUrl: 'mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin'})
 	
 }));
 
@@ -43,11 +44,9 @@ const generateSession = async (req, res, next) => {
     next();
 }
 
-app.use(generateSession)
-
 app.use('/auth', authRouter);
 
-app.get('/login', (req, res)=>{
+app.get('/login', generateSession, (req, res)=>{
 
     if (!req.session.backURL){
         req.session.backURL = req.header('Referer') || '/';
@@ -75,7 +74,7 @@ app.get('*', async (req, res, next) => {
 })
 
 
- https.createServer(options, app).listen(443, () => console.log(`Server started at port 443`));
+https.createServer(options, app).listen(443, () => console.log(`Server started at port 443`));
 //app.listen(8081);
 
 
