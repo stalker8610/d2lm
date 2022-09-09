@@ -32,13 +32,15 @@ const options = {
 app.use(express.urlencoded())
 app.use(express.static(path.join(__dirname, 'client/')));
 
-app.use(async (req, res, next)=>{
+const generateSession = async (req, res, next) => {
     if (!req.sessionID) {
         await req.session.regenerate();
         console.log('new session generated with ID =', req.sessionID);
     }
     next();
-})
+}
+
+app.use(generateSession)
 
 app.use('/auth', authRouter);
 
@@ -48,7 +50,7 @@ app.get('/login', (req, res)=>{
         req.session.backURL = req.header('Referer') || '/';
     }
 
-    const authUrl = authRouter.getAuthUrl();
+    const authUrl = getAuthUrl(req.sessionID);
     console.log(`authUrl = ${authUrl}`);
     res.redirect(authUrl);
 
@@ -70,7 +72,8 @@ app.get('*', async (req, res, next) => {
 })
 
 
-https.createServer(options, app).listen(443, () => console.log(`Server started at port 443`));
+ https.createServer(options, app).listen(443, () => console.log(`Server started at port 443`));
+//app.listen(8081);
 
 
 
