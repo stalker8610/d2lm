@@ -36,11 +36,19 @@ const options = {
 
 app.use(express.urlencoded())
 
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.static(path.join(__dirname, 'client/')));
+
+app.options('/getAuthUrl', (req, res) =>{
+     console.log('get options');
+    res.set({'Access-Control-Allow-Origin' : '*',
+             'Access-Control-Allow-Methods': 'GET',
+	     'Access-Control-Allow-Headers': 'Content-Type'}).status(200).send('OK');
+})
+
 
 app.get('/getAuthUrl', (req, res) => {
 
-  res.status(200).send(getAuthUrl(req.sessionID));
+  res.status(200).set('Access-Control-Allow-Origin', '*').send(getAuthUrl(req.sessionID));
 
   // if (req.hostname.localeCompare("d2lm.ru")) {
   //   res.status(200).send(getAuthUrl(req.sessionID));
@@ -97,7 +105,7 @@ app.get('/logout', (req, res) => {
 app.get('*', async (req, res, next) => {
 
  console.log('get in *');
- 
+console.log(`dirname =  ${__dirname}`); 
  if (!req.sessionID) {
     await req.session.regenerate();
   }
@@ -111,7 +119,9 @@ app.get('*', async (req, res, next) => {
   //   res.render('auth', { authUrl: getAuthUrl(req.sessionID) });
   // }
 
-  res.sendFile(path.join(__dirname, 'client/public/index.html'));
+  res.sendFile(path.join(__dirname, 'client/index.html'));
+  
+
 })
 
 
