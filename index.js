@@ -8,6 +8,7 @@ try {
 
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const fs = require('fs');
 const path = require('path');
 const { authRouter, getAuthUrl } = require('./api/auth/auth');
@@ -18,7 +19,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     secret: 'dd9s02a2f9dsa',
-    cookie: { secure: true, sameSite: 'lax' }
+    cookie: { secure: true, sameSite: 'lax' },
+    store: MongoStore.create({mongoUrl: 'mongodb://localhost:27017'})
+	
 }));
 
 let keyPath = '/etc/letsencrypt/live/d2lm.ru/privkey.pem';
