@@ -77,8 +77,8 @@ authRouter.get('/', (req, res, next) => {
             getToken(req.query.code, (response) => {
                 console.log(`Got authorization token: \n\r${JSON.stringify(response)}`)
                 req.session.token = response.access_token;
-		req.session.token_expired_at = new Date( (new Date()).getTime() + response.expires_in * 1000);
-		req.session.membership_id = response.membership_id;
+                req.session.token_expired_at = new Date((new Date()).getTime() + response.expires_in * 1000);
+                req.session.membership_id = response.membership_id;
                 redirectBack(req, res);
             })
 

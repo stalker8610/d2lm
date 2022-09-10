@@ -12,6 +12,7 @@ const MongoStore = require('connect-mongo');
 const fs = require('fs');
 const path = require('path');
 const { authRouter, getAuthUrl } = require('./api/auth/auth');
+const { default: profileRouter } = require('./api/profile/profile');
 
 var app = express();
 
@@ -45,6 +46,7 @@ const generateSession = async (req, res, next) => {
 }
 
 app.use('/auth', authRouter);
+app.use('/profile', profileRouter);
 
 app.get('/login', generateSession, (req, res)=>{
 
