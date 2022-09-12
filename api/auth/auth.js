@@ -104,7 +104,7 @@ authRouter.get('/', (req, res, next) => {
 authRouter.get('/logout', (req, res) => {
 
     req.session.regenerate(() => {
-        res.status(200).send('Logout done successfully');
+	res.redirect(req.baseUrl);
     });
 
 });

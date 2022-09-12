@@ -25,36 +25,42 @@ function getProfileData(membership_id, accessToken, callback) {
 
     fetch(reqOptions.url, { headers: reqOptions.headers })
         .then(
-            response => response.json(),
+            (response) => {
+		if (response.status == 401) reject();
+		else {
+			//console.log(response);
+			return response.json();
+		}
+	    },
             (err) => {
                 console.log(`Error occured while get request to bungie.net:`)
                 console.log(`  membership_id = ${membership_id}`)
                 console.log(`  request = ${reqOptions}`)
                 console.log(`  error = ${err}`);
-                callback(err,{});
+                reject();
             })
-        .then( json => callback(json) );
+        .then( json => callback(json), () => callback(null, 401) );
 
 }
 
 
-var profileRouter = express();
+let profileRouter = express();
 
 profileRouter.get('/', (req, res)=>{
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())){
-        res.status(401).json({membership_id: ''});
+        res.status(401).json(null);
     }else{
-        getProfileData(req.session.membership_id, req.session.token, (err=undefined, userData)=>{
-            if (err) res.status(500).json({});
+        getProfileData(req.session.membership_id, req.session.token, (userData, err)=>{
+            if (err) res.status(401).json(null);
             else{
                 console.log(userData);
-                res.status(200).json(userData);
+                res.status(200).json(userData.Response);
             } 
         })
     }
 
 })
 
-export default profileRouter
+module.exports = { profileRouter }
 

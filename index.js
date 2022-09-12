@@ -12,7 +12,7 @@ const MongoStore = require('connect-mongo');
 const fs = require('fs');
 const path = require('path');
 const { authRouter, getAuthUrl } = require('./api/auth/auth');
-const { default: profileRouter } = require('./api/profile/profile');
+const { profileRouter } = require('./api/profile/profile');
 
 var app = express();
 
@@ -46,7 +46,7 @@ const generateSession = async (req, res, next) => {
 }
 
 app.use('/auth', authRouter);
-app.use('/profile', profileRouter);
+app.use('/api/profile', profileRouter);
 
 app.get('/login', generateSession, (req, res)=>{
 
@@ -58,6 +58,11 @@ app.get('/login', generateSession, (req, res)=>{
     console.log(`authUrl = ${authUrl}`);
     res.redirect(authUrl);
 
+})
+
+app.get('/logout', async (req, res)=>{
+	await req.session.regenerate();
+	res.redirect('/');
 })
 
 app.get('*', async (req, res, next) => {
