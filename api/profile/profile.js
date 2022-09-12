@@ -162,21 +162,21 @@ profileRouter.get('/characters', (req, res) => {
             else {
                 console.log(userData);
                 
-                let result = userData.Response.characters.data;
+                // let result = userData.Response.characters.data;
 
-                // let result = [];
-                // let characters = userData.Response.characters.data;
-                // for (let key in characters) {
-                //     let character = characters[key];
-                //     if (character.characterId) {
-                //         result.push({
-                //             characterId: character.characterId,
-                //             classType: character.classType,
-                //             emblemPath: character.emblemPath,
-                //             light: character.light
-                //         })
-                //     }
-                // }
+                let result = [];
+                let characters = userData.Response.characters.data;
+                for (let key in characters) {
+                    let character = characters[key];
+                    if (character.characterId) {
+                        result.push({
+                            characterId: character.characterId,
+                            classType: character.classType,
+                            emblemPath: character.emblemPath,
+                            light: character.light
+                        })
+                    }
+                }
                 res.status(200).json(result);
             }
         })
