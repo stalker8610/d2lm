@@ -11,7 +11,7 @@ const BUNGIE_TOKEN_URL = "https://www.bungie.net/Platform/App/OAuth/token"
 
 function getAuthUrl(state) {
 
-    const authUrl = `${BUNGIE_AUTH_URL}?response_type=code&client_id=${BUNGIE_CLIENT_ID}&state=${encodeURIComponent(state)}`;
+    const authUrl = `${BUNGIE_AUTH_URL}?reauth=true&response_type=code&client_id=${BUNGIE_CLIENT_ID}&state=${encodeURIComponent(state)}`;
     return authUrl;
 
 }

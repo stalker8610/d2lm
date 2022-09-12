@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const fetch = require('node-fetch');
 
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
@@ -74,17 +74,17 @@ async function getGamePlatformMembershipId(membershipId, accessToken, callback) 
         console.log(err);
     }
 
-    if (membershipsResponseJSON){
+    if (membershipsResponseJSON) {
 
-       if (membershipsResponseJSON.Response.destinyMemberships.length>0){
-            membership = membershipsResponseJSON.Response.destinyMemberships[0];
+        if (membershipsResponseJSON.Response.destinyMemberships.length > 0) {
+            let membership = membershipsResponseJSON.Response.destinyMemberships[0];
 
-	    membershipInfo.membershipType = membership.membershipType;
+            membershipInfo.membershipType = membership.membershipType;
             membershipInfo.membershipId = membership.membershipId;
         }
 
     }
-     
+
     return membershipInfo;
 
 }
@@ -136,7 +136,15 @@ profileRouter.get('/', (req, res) => {
             if (err) res.status(401).json(null);
             else {
                 console.log(userData);
-                res.status(200).json(userData.Response);
+
+                let userJSON = {
+                    name: userData.Response.displayName,
+                    membershipId: userData.Response.membershipId,
+                    profilePicturePath: userData.Response.profilePicturePath,
+                    profilePictureWidePath: userData.Response.profilePictureWidePath
+                }
+
+                res.status(200).json(userJSON);
             }
         })
     }
@@ -153,15 +161,22 @@ profileRouter.get('/characters', (req, res) => {
             if (err) res.status(401).json(null);
             else {
                 console.log(userData);
-		let result = [];
-		let characters = userData.Response.characters.data;
-		for (let key in characters){
-			character = characters[key];
-			if (character.characterId) {
-				result.push({ characterId: character.characterId, 
-classType: character.classType, emblemPath: character.emblemPath, light: character.light})
-			} 
-		}
+                
+                let result = userData.Response.characters.data;
+
+                // let result = [];
+                // let characters = userData.Response.characters.data;
+                // for (let key in characters) {
+                //     let character = characters[key];
+                //     if (character.characterId) {
+                //         result.push({
+                //             characterId: character.characterId,
+                //             classType: character.classType,
+                //             emblemPath: character.emblemPath,
+                //             light: character.light
+                //         })
+                //     }
+                // }
                 res.status(200).json(result);
             }
         })
