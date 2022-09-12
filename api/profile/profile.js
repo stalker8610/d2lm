@@ -48,7 +48,7 @@ async function getGamePlatformMembershipId(membershipId, accessToken, callback) 
     const membershipType = 254; //BungieNext
     const reqOptions = prepareApiRequest(`/User/GetMembershipsById/${membershipId}/${membershipType}/`, accessToken);
 
-    let membershipInfo;
+    let membershipInfo = {};
     let membershipsResponseJSON;
 
     try {
@@ -76,10 +76,11 @@ async function getGamePlatformMembershipId(membershipId, accessToken, callback) 
 
     if (membershipsResponseJSON){
 
-        for(let membership in membershipsResponseJSON.Response.destinyMemberships){
-            membershipInfo.membershipType = membership.membershipType;
-            membershipInfo.membershipId = membership.membershipId
-            break;
+       if (membershipsResponseJSON.Response.destinyMemberships.length>0){
+            membership = membershipsResponseJSON.Response.destinyMemberships[0];
+
+	    membershipInfo.membershipType = membership.membershipType;
+            membershipInfo.membershipId = membership.membershipId;
         }
 
     }
@@ -89,10 +90,10 @@ async function getGamePlatformMembershipId(membershipId, accessToken, callback) 
 }
 
 
-function getCharactersData(membershipId, accessToken, callback) {
+async function getCharactersData(membershipId, accessToken, callback) {
 
     //first we have to know Steam / Epic store membership ID for further requests
-    let membershipData = getGamePlatformMembershipId(membershipId, accessToken, callback)
+    let membershipData = await getGamePlatformMembershipId(membershipId, accessToken, callback)
 
     if (!membershipData) {
         callback(null);
@@ -102,7 +103,7 @@ function getCharactersData(membershipId, accessToken, callback) {
     const membershipType = 254; //BungieNet
 
     const reqOptions = prepareApiRequest(`/Destiny2/${membershipData.membershipType}/Profile/${membershipData.membershipId}/
-                                            ?components=Profiles,Characters,CharacterProgressions`, accessToken);
+                                            ?components=Characters`, accessToken);
 
     fetch(reqOptions.url, { headers: reqOptions.headers })
         .then(
@@ -152,7 +153,16 @@ profileRouter.get('/characters', (req, res) => {
             if (err) res.status(401).json(null);
             else {
                 console.log(userData);
-                res.status(200).json(userData.Response);
+		let result = [];
+		let characters = userData.Response.characters.data;
+		for (let key in characters){
+			character = characters[key];
+			if (character.characterId) {
+				result.push({ characterId: character.characterId, 
+classType: character.classType, emblemPath: character.emblemPath, light: character.light})
+			} 
+		}
+                res.status(200).json(result);
             }
         })
     }
