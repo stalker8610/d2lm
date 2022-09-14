@@ -42,13 +42,13 @@ async function getProfileData(membershipId, accessToken, callback) {
             imgPath: responseJSON.Response.profilePicturePath
         }
 
+        return result;
+
     } catch (err) {
         result.err = err;
         console.log(`Error while getProfileData: `, err);
         return result;
     }
-
-    return result;
 
 }
 
