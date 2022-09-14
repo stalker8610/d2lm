@@ -154,11 +154,11 @@ profileRouter.get('/', (req, res) => {
 profileRouter.get('/characters', (req, res) => {
 
     if (!req.session.membership_id) {
-        res.status(401).json(null);
+        res.status(401).json([]);
     } else {
 
         getCharactersData(req.session.membership_id, req.session.token, (userData, err) => {
-            if (err) res.status(401).json(null);
+            if (err) res.status(401).json([]);
             else {
                 console.log(userData);
                 
