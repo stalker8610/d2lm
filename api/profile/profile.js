@@ -132,7 +132,7 @@ profileRouter.get('/', async (req, res) => {
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
         res.status(401).json(null);
     } else {
-        const profileData = await getProfileData(req.session.membership_id, req.session.token);
+        let profileData = await getProfileData(req.session.membership_id, req.session.token);
 
         if (profileData.err) res.status(401).json(null);
         else {
