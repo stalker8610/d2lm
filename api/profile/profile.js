@@ -122,7 +122,49 @@ async function getCharactersData(accessToken, storeMembershipData) {
 
 }
 
+async function getEquipmentData(accessToken, storeMembershipData, characterId){
 
+    let result = [];
+
+    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.storeMembershipType}
+                                            /Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}
+                                            ?components=CharacterInventories,CharacterEquipment`, accessToken);
+
+    try {
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
+        if (response.status == 401) {
+            throw Error('Not authorized');
+        }
+
+        let responseJSON = await response.json();
+        let charactersData = responseJSON.Response.characters.data;
+
+        for (let key in charactersData) {
+
+            let character = charactersData[key];
+
+            if (character.characterId) {
+                result.push({
+                    id: character.characterId,
+                    classType: character.classType,
+                    light: character.light,
+                    emblemPath: character.emblemPath
+                })
+            }
+
+        }
+
+        return result;
+
+    } catch (err) {
+        result.err = err;
+        console.log(`Error while getEquipmentData: `, err);
+        return result;
+    }
+
+
+
+}
 
 
 let profileRouter = express();
