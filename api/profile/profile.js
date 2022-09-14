@@ -28,22 +28,24 @@ async function getProfileData(membershipId, accessToken, callback) {
     //get profile data
 
     try {
+
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers });
         if (response.status == 401) {
-            result.err = 'Not authorized';
             throw Error('Not authorized');
         }
+
+        let responseJSON = await response.json();
+
+        result.data.user = {
+            bungieMembershipId: membershipId,
+            name: responseJSON.Response.displayName,
+            imgPath: responseJSON.Response.profilePicturePath
+        }
+
     } catch (err) {
-        if (err != 'Not authorized') console.log(err);
+        result.err = err;
+        console.log(`Error while getProfileData: `, err);
         return result;
-    }
-
-    let responseJSON = await response.json();
-
-    result.data.user = {
-        bungieMembershipId: membershipId,
-        name: responseJSON.Response.displayName,
-        imgPath: responseJSON.Response.profilePicturePath
     }
 
     return result;
@@ -60,21 +62,22 @@ async function getStoreMembershipData(membershipId, accessToken, callback) {
     try {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers });
         if (response.status == 401) {
-            result.err = 'Not authorized';
             throw Error('Not authorized');
         }
+
+        let responseJSON = await response.json();
+        if (responseJSON.Response.destinyMemberships.length > 0) {
+            result.membershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
+            result.membershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
+        }
+
+        return result;
+
     } catch (err) {
-        if (err != 'Not authorized') console.log(err);
+        result.err = err;
+        console.log(`Error while getStoreMembershipData: `, err);
         return result;
     }
-
-    let responseJSON = await response.json();
-    if (responseJSON.Response.destinyMemberships.length > 0) {
-        result.membershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
-        result.membershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
-    }
-
-    return result;
 
 }
 
@@ -88,34 +91,34 @@ async function getCharactersData(accessToken, storeMembershipData) {
     try {
         let response = fetch(reqOptions.url, { headers: reqOptions.headers })
         if (response.status == 401) {
-            result.err = 'Not authorized';
             throw Error('Not authorized');
         }
-    } catch (err) {
-        if (err != 'Not authorized') console.log(err);
-        return result;
-    }
 
-    let responseJSON = await response.json();
-    let charactersData = responseJSON.Response.characters.data;
+        let responseJSON = await response.json();
+        let charactersData = responseJSON.Response.characters.data;
 
+        for (let key in charactersData) {
 
-    for (let key in charactersData) {
-        
-        let character = charactersData[key];
+            let character = charactersData[key];
 
-        if (character.characterId) {
-            result.push({
-                id: character.characterId,
-                classType: character.classType,
-                light: character.light,
-                emblemPath: character.emblemPath
-            })
+            if (character.characterId) {
+                result.push({
+                    id: character.characterId,
+                    classType: character.classType,
+                    light: character.light,
+                    emblemPath: character.emblemPath
+                })
+            }
+
         }
 
-    }
+        return result;
 
-    return result;
+    } catch (err) {
+        result.err = err;
+        console.log(`Error while getCharactersData: `, err);
+        return result;
+    }
 
 }
 
