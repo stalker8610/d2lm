@@ -141,7 +141,7 @@ profileRouter.get('/', async (req, res) => {
             const charactersData = await getCharactersData(req.session.token, storeMembershipData)
 
             const result = {
-                user: profileData.user,
+                main: profileData.user,
                 storeMembership: storeMembershipData,
                 characters: [...charactersData]
             };
