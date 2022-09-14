@@ -21,7 +21,7 @@ const prepareApiRequest = (apiUrl, accessToken) => {
 
 async function getProfileData(membershipId, accessToken, callback) {
 
-    let result = { err: '', data: null };
+    let result = { err: '', data: {} };
 
     const reqOptions = prepareApiRequest(`/User/GetBungieNetUserById/${membershipId}/`, accessToken);
 
