@@ -67,8 +67,8 @@ async function getStoreMembershipData(membershipId, accessToken, callback) {
 
         let responseJSON = await response.json();
         if (responseJSON.Response.destinyMemberships.length > 0) {
-            result.storeMembershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
-            result.storeMembershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
+            result.storeMembershipType = responseJSON.Response.destinyMemberships[0].membershipType;
+            result.storeMembershipId = responseJSON.Response.destinyMemberships[0].membershipId;
         }
 
         return result;
