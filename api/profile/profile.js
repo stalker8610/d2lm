@@ -19,167 +19,131 @@ const prepareApiRequest = (apiUrl, accessToken) => {
 }
 
 
-function getProfileData(membershipId, accessToken, callback) {
+async function getProfileData(membershipId, accessToken, callback) {
+
+    let result = { err: '', data: null };
 
     const reqOptions = prepareApiRequest(`/User/GetBungieNetUserById/${membershipId}/`, accessToken);
 
-    fetch(reqOptions.url, { headers: reqOptions.headers })
-        .then(
-            (response) => {
-                if (response.status == 401) reject();
-                else {
-                    //console.log(response);
-                    return response.json();
-                }
-            },
-            (err) => {
-                console.log(`Error occured while get request to bungie.net:`)
-                console.log(`  membership_id = ${membershipId}`)
-                console.log(`  request = ${reqOptions}`)
-                console.log(`  error = ${err}`);
-                reject();
-            })
-        .then(json => callback(json), () => callback(null, 401));
+    //get profile data
+
+    try {
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers });
+        if (response.status == 401) {
+            result.err = 'Not authorized';
+            throw Error('Not authorized');
+        }
+    } catch (err) {
+        if (err != 'Not authorized') console.log(err);
+        return result;
+    }
+
+    let responseJSON = await response.json();
+
+    result.data.user = {
+        bungieMembershipId: membershipId,
+        name: responseJSON.Response.displayName,
+        imgPath: responseJSON.Response.profilePicturePath
+    }
+
+    return result;
 
 }
 
-async function getGamePlatformMembershipId(membershipId, accessToken, callback) {
+async function getStoreMembershipData(membershipId, accessToken, callback) {
 
-    const membershipType = 254; //BungieNext
-    const reqOptions = prepareApiRequest(`/User/GetMembershipsById/${membershipId}/${membershipType}/`, accessToken);
+    let result = {};
 
-    let membershipInfo = {};
-    let membershipsResponseJSON;
+    const bungieNetMembershipType = 254;
+    const reqOptions = prepareApiRequest(`/User/GetMembershipsById/${membershipId}/${bungieNetMembershipType}/`, accessToken);
 
     try {
-        membershipsResponseJSON = await fetch(reqOptions.url, { headers: reqOptions.headers })
-            .then(
-                (response) => {
-                    if (response.status == 401) reject(); //invalid token
-                    else {
-                        //console.log(response);
-                        return response.json();
-                    }
-                },
-                (err) => {
-                    console.log(`Error occured while get request to bungie.net:`)
-                    console.log(`  membership_id = ${membershipId}`)
-                    console.log(`  request = ${reqOptions}`)
-                    console.log(`  error = ${err}`);
-                    reject();
-                })
-
-    }
-    catch (err) {
-        console.log(err);
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers });
+        if (response.status == 401) {
+            result.err = 'Not authorized';
+            throw Error('Not authorized');
+        }
+    } catch (err) {
+        if (err != 'Not authorized') console.log(err);
+        return result;
     }
 
-    if (membershipsResponseJSON) {
+    let responseJSON = await response.json();
+    if (responseJSON.Response.destinyMemberships.length > 0) {
+        result.membershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
+        result.membershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
+    }
 
-        if (membershipsResponseJSON.Response.destinyMemberships.length > 0) {
-            let membership = membershipsResponseJSON.Response.destinyMemberships[0];
+    return result;
 
-            membershipInfo.membershipType = membership.membershipType;
-            membershipInfo.membershipId = membership.membershipId;
+}
+
+async function getCharactersData(accessToken, storeMembershipData) {
+
+    let result = [];
+
+    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.membershipType}
+                                            /Profile/${storeMembershipData.membershipId}/?components=Characters`, accessToken);
+
+    try {
+        let response = fetch(reqOptions.url, { headers: reqOptions.headers })
+        if (response.status == 401) {
+            result.err = 'Not authorized';
+            throw Error('Not authorized');
+        }
+    } catch (err) {
+        if (err != 'Not authorized') console.log(err);
+        return result;
+    }
+
+    let responseJSON = await response.json();
+    let charactersData = responseJSON.Response.characters.data;
+
+
+    for (let key in charactersData) {
+        
+        let character = charactersData[key];
+
+        if (character.characterId) {
+            result.push({
+                id: character.characterId,
+                classType: character.classType,
+                light: character.light,
+                emblemPath: character.emblemPath
+            })
         }
 
     }
 
-    return membershipInfo;
+    return result;
 
 }
 
 
-async function getCharactersData(membershipId, accessToken, callback) {
 
-    //first we have to know Steam / Epic store membership ID for further requests
-    let membershipData = await getGamePlatformMembershipId(membershipId, accessToken, callback)
-
-    if (!membershipData) {
-        callback(null);
-        return;
-    }
-
-    const membershipType = 254; //BungieNet
-
-    const reqOptions = prepareApiRequest(`/Destiny2/${membershipData.membershipType}/Profile/${membershipData.membershipId}/
-                                            ?components=Characters`, accessToken);
-
-    fetch(reqOptions.url, { headers: reqOptions.headers })
-        .then(
-            (response) => {
-                if (response.status == 401) reject();
-                else {
-                    //console.log(response);
-                    return response.json();
-                }
-            },
-            (err) => {
-                console.log(`Error occured while get request to bungie.net:`)
-                console.log(`  membership_id = ${membershipId}`)
-                console.log(`  request = ${reqOptions}`)
-                console.log(`  error = ${err}`);
-                reject();
-            })
-        .then(json => callback(json), () => callback(null, 401));
-
-}
 
 let profileRouter = express();
 
-profileRouter.get('/', (req, res) => {
+profileRouter.get('/', async (req, res) => {
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
         res.status(401).json(null);
     } else {
-        getProfileData(req.session.membership_id, req.session.token, (userData, err) => {
-            if (err) res.status(401).json(null);
-            else {
-                console.log(userData);
+        const profileData = await getProfileData(req.session.membership_id, req.session.token);
 
-                let userJSON = {
-                    name: userData.Response.displayName,
-                    membershipId: userData.Response.membershipId,
-                    profilePicturePath: userData.Response.profilePicturePath,
-                    profilePictureWidePath: userData.Response.profilePictureWidePath
-                }
+        if (profileData.err) res.status(401).json(null);
+        else {
 
-                res.status(200).json(userJSON);
-            }
-        })
-    }
+            const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
 
-})
+            profileData = { ...profileData, ...storeMembershipData };
 
-profileRouter.get('/characters', (req, res) => {
+            const charactersData = await getCharactersData(req.session.membership_id, req.session.token, storeMembershipData)
+            profileData = { ...profileData, characters: [...charactersData] };
 
-    if (!req.session.membership_id) {
-        res.status(401).json([]);
-    } else {
+            res.status(200).json(profileData);
 
-        getCharactersData(req.session.membership_id, req.session.token, (userData, err) => {
-            if (err) res.status(401).json([]);
-            else {
-                console.log(userData);
-                
-                // let result = userData.Response.characters.data;
-
-                let result = [];
-                let characters = userData.Response.characters.data;
-                for (let key in characters) {
-                    let character = characters[key];
-                    if (character.characterId) {
-                        result.push({
-                            characterId: character.characterId,
-                            classType: character.classType,
-                            emblemPath: character.emblemPath,
-                            light: character.light
-                        })
-                    }
-                }
-                res.status(200).json(result);
-            }
-        })
+        }
     }
 
 })

@@ -60,24 +60,15 @@ app.get('/login', generateSession, (req, res)=>{
 
 })
 
-app.get('/logout', async (req, res)=>{
-	await req.session.regenerate();
-	res.redirect('/');
+app.get('/logout', (req, res)=>{
+	req.session.regenerate(()=>{
+        res.redirect('/');
+    });
+	
 })
 
 app.get('*', async (req, res, next) => {
-
-    // if (req.session.token) {
-    //   //authorized user
-    //   //res.send('Authorized user with token ' + req.session.token);
-    //   res.render('main', { token: req.session.token });
-    // }
-    // else {
-    //   res.render('auth', { authUrl: getAuthUrl(req.sessionID) });
-    // }
-
     res.sendFile(path.join(__dirname, 'client/index.html'));
-
 })
 
 

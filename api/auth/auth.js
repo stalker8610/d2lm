@@ -101,12 +101,5 @@ authRouter.get('/', (req, res, next) => {
 
 })
 
-authRouter.get('/logout', (req, res) => {
-
-    req.session.regenerate(() => {
-	res.redirect(req.baseUrl);
-    });
-
-});
 
 module.exports = { getAuthUrl, authRouter };
