@@ -21,7 +21,7 @@ const prepareApiRequest = (apiUrl, accessToken) => {
 
 async function getProfileData(membershipId, accessToken, callback) {
 
-    let result = { err: '', data: {} };
+    let result = { err: '', user: null };
 
     const reqOptions = prepareApiRequest(`/User/GetBungieNetUserById/${membershipId}/`, accessToken);
 
@@ -36,7 +36,7 @@ async function getProfileData(membershipId, accessToken, callback) {
 
         let responseJSON = await response.json();
 
-        result.data.user = {
+        result.user = {
             bungieMembershipId: membershipId,
             name: responseJSON.Response.displayName,
             imgPath: responseJSON.Response.profilePicturePath
@@ -67,8 +67,8 @@ async function getStoreMembershipData(membershipId, accessToken, callback) {
 
         let responseJSON = await response.json();
         if (responseJSON.Response.destinyMemberships.length > 0) {
-            result.membershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
-            result.membershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
+            result.storeMembershipType = membershipsResponseJSON.Response.destinyMemberships[0].membershipType;
+            result.storeMembershipId = membershipsResponseJSON.Response.destinyMemberships[0].membershipId;
         }
 
         return result;
@@ -132,19 +132,21 @@ profileRouter.get('/', async (req, res) => {
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
         res.status(401).json(null);
     } else {
-        let profileData = await getProfileData(req.session.membership_id, req.session.token);
+        const profileData = await getProfileData(req.session.membership_id, req.session.token);
 
         if (profileData.err) res.status(401).json(null);
         else {
 
             const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
-
-            profileData = { ...profileData, ...storeMembershipData };
-
             const charactersData = await getCharactersData(req.session.membership_id, req.session.token, storeMembershipData)
-            profileData = { ...profileData, characters: [...charactersData] };
 
-            res.status(200).json(profileData);
+            const result = {
+                user: profileData.user,
+                storeMembership: storeMembershipData,
+                characters: [...charactersData]
+            };
+
+            res.status(200).json(result);
 
         }
     }
