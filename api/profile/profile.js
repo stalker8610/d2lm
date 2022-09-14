@@ -89,7 +89,7 @@ async function getCharactersData(accessToken, storeMembershipData) {
                                             /Profile/${storeMembershipData.membershipId}/?components=Characters`, accessToken);
 
     try {
-        let response = fetch(reqOptions.url, { headers: reqOptions.headers })
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
         if (response.status == 401) {
             throw Error('Not authorized');
         }
