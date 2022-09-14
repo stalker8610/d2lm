@@ -85,8 +85,8 @@ async function getCharactersData(accessToken, storeMembershipData) {
 
     let result = [];
 
-    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.membershipType}
-                                            /Profile/${storeMembershipData.membershipId}/?components=Characters`, accessToken);
+    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.storeMembershipType}
+                                            /Profile/${storeMembershipData.storeMembershipId}/?components=Characters`, accessToken);
 
     try {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
