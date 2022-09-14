@@ -138,7 +138,7 @@ profileRouter.get('/', async (req, res) => {
         else {
 
             const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
-            const charactersData = await getCharactersData(req.session.membership_id, req.session.token, storeMembershipData)
+            const charactersData = await getCharactersData(req.session.token, storeMembershipData)
 
             const result = {
                 user: profileData.user,
