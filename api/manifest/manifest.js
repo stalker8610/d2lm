@@ -17,7 +17,7 @@ async function readComponentsManifest(savedVersions) {
 
     console.log('Manifest fetched');
 
-    const limit = 1;
+    const limit = 100;
     let count = 0;
 
     ['ru'].forEach((language) => {
@@ -216,7 +216,7 @@ async function saveDownloadedVersionsInDatabase() {
 
 async function readSavedVersions() {
 
-    console.log('Saved versions of components:');
+    //console.log('Saved versions of components:');
 
     let savedVersions = new Map();
 
@@ -226,7 +226,7 @@ async function readSavedVersions() {
     const collection = client.db('d2lm').collection('savedManifestVersions');
     await collection.find().forEach((doc) => {
         savedVersions.set(doc.componentName, doc.pathTo);
-        console.log(`   --- ${doc.componentName} ${doc.pathTo}`);
+        //console.log(`   --- ${doc.componentName} ${doc.pathTo}`);
     });
 
     client.close();
