@@ -3,10 +3,9 @@ const path = require('path');
 const { spawn } = require('node:child_process');
 const https = require('https');
 const fs = require('fs');
-const { resolve } = require('node:path');
+const fsPromises = fs.promises
 const { MongoClient } = require('mongodb');
 
-//const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
 var componentsManifest = new Map();
 
@@ -33,8 +32,8 @@ async function readComponentsManifest(savedVersions) {
                 console.log(`   ---- ${component}`, '\x1b[33m', 'NEED UPDATE', '\x1b[0m');
                 componentsManifest.set(component, json.Response.jsonWorldComponentContentPaths[language][component]);
 
-		count++;
-		if (count===limit) break;
+                count++;
+                if (count === limit) break;
             }
         }
 
@@ -45,9 +44,9 @@ async function readComponentsManifest(savedVersions) {
 
 async function downloadManifestComponentsData() {
 
-	console.log();
-	console.log();
-	console.log();
+    console.log('');
+    console.log('');
+    console.log('');
 
     for ([key, value] of componentsManifest) {
         console.log(`Downloading component ${key}...`);
@@ -80,16 +79,80 @@ function downloadComponent(componentName, pathTo) {
 
 }
 
-function mongoImportComponent(componentName) {
+async function splitJson(fileName, maxFileSize) {
+
+    let resultFileNamesArray = [];
+
+    const data = await fsPromises.readFile(fileName, { encoding: "utf8" });
+    let largeJson = JSON.parse(data);
+
+    let resultStr = '{';
+    let index = 1;
+
+    for (const [key, value] of Object.entries(largeJson)) {
+
+        const entryJson = `${JSON.stringify(key)}:${JSON.stringify(value)}`;
+
+        if ((resultStr + entryJson).length >= maxFileSize) {
+
+            resultStr = resultStr.substring(0, resultStr.length - 1) + '}';
+
+            let chunkFileName = fileName + index;
+            fs.writeFileSync(chunkFileName, resultStr);
+
+            resultFileNamesArray.push(chunkFileName);
+
+            resultStr = '{' + entryJson + ',';
+            index++;
+
+        }
+        else {
+            resultStr += entryJson + ',';
+        }
+
+    }
+
+    resultStr = resultStr.substring(0, resultStr.length - 1) + '}';
+
+    let chunkFileName = fileName + index;
+    fs.writeFileSync(chunkFileName, resultStr);
+    resultFileNamesArray.push(chunkFileName);
+
+    return resultFileNamesArray;
+}
+
+
+
+async function mongoImportComponent(componentName) {
 
     console.log(`Move component data into database...`);
     let fileName = path.join(__dirname, 'downloads', componentName + '.json');
     //const command = `mongoimport --uri mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin --collection ${componentName} --type json --file ${fileName} --drop`;
 
-    return new Promise((resolve, reject) => {
+    const maxFileSize = 1024 * 1024 * 10; //10Mb
 
-        const cmd = spawn('mongoimport',
-            [
+    const chunks = [fileName];
+    const fileSize = fs.statSync(fileName).size;
+    let dropCollection = true;
+
+    if (fileSize > maxFileSize) {
+        //split large file for chunks to upload into db
+        console.log(`Split large file for chunks (total size ${fileSize / 1024 / 1024}MB)...`);
+        chunks = await splitJson(fileName, maxFileSize);
+        console.log(`Split complete`);
+        dropCollection = false;
+    }
+
+
+    for (let index = 0; index < chunks.length; index++) {
+
+        const chunkfileName = chunks[index];
+
+        await new Promise((resolve, reject) => {
+
+            console.log(`Move ${chunkfileName} into database...`);
+
+            const args = [
                 '--uri',
                 'mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin',
                 '--collection',
@@ -97,24 +160,34 @@ function mongoImportComponent(componentName) {
                 '--type',
                 'json',
                 '--file',
-                fileName,
-                '--drop'
-            ]);
+                fileName
+            ];
 
-        cmd.stdout.on('data', (data) => {
-            console.log(`${data}`);
+            if (dropCollection || index === 0) args.push['--drop'];
+            const cmd = spawn('mongoimport', args);
+
+            cmd.stderr.on('data', (data) => {
+                console.error(`${data}`);
+            });
+
+            cmd.on('close', (code) => {
+                console.log(`mongoimport process exited with code ${code}`);
+                resolve();
+            });
         });
+    }
 
+    if (chunks.length > 1) {
+        //remove chunks
+        console.log('Flushing chunks...')
 
-        cmd.stderr.on('data', (data) => {
-            console.error(`${data}`);
-        });
+        for (let chunkfileName of chunks) {
+            await fsPromises.unlink(chunkfileName);
+        };
 
-        cmd.on('close', (code) => {
-            console.log(`mongoimport process exited with code ${code}`);
-            resolve();
-        });
-    });
+        console.log('Flushing complete');
+    }
+
 }
 
 async function saveDownloadedVersionsInDatabase() {
@@ -135,7 +208,7 @@ async function saveDownloadedVersionsInDatabase() {
         };
 
         await collection.updateOne(filter, updateDoc, { upsert: true });
-        console.log('Version of ',key,' saved in db');
+        console.log('Version of ', key, ' saved in db');
     }
 
     client.close();
@@ -144,7 +217,7 @@ async function saveDownloadedVersionsInDatabase() {
 async function readSavedVersions() {
 
     console.log('Saved versions of components:');
-  
+
     let savedVersions = new Map();
 
     const client = new MongoClient('mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin');
@@ -171,3 +244,5 @@ async function readSavedVersions() {
     console.log('Operation done successfully');
 
 })()
+
+
