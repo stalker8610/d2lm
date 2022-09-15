@@ -8,55 +8,59 @@ const { MongoClient } = require('mongodb');
 
 //const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
-var collectionsManifest = new Map();
+var componentsManifest = new Map();
 
-async function readManifestCollections(savedVersions) {
+async function readComponentsManifest(savedVersions) {
 
     console.log('Fetching manifest...');
     let json = await fetch('https://www.bungie.net/Platform/Destiny2/Manifest')
         .then(res => res.json())
 
-    console.log('Manifest fetched.');
+    console.log('Manifest fetched');
 
-
+    const limit = 1;
     let count = 0;
 
     ['ru'].forEach((language) => {
 
-        console.log('Loading paths for language = ', language);
+        console.log(`Loading paths for language \'${language}\'`);
 
-        for (let collection in json.Response.jsonWorldComponentContentPaths[language]) {
+        for (let component in json.Response.jsonWorldComponentContentPaths[language]) {
 
-            if (savedVersions.get(collection) === json.Response.jsonWorldComponentContentPaths[language][collection]) {
-                console.log('   ---- ', collection, '\x1b[32m%s\x1b[0m', ' is UP TO DATE');
+            if (savedVersions.get(component) === json.Response.jsonWorldComponentContentPaths[language][component]) {
+                console.log(`   ---- ${component}`, '\x1b[32m', 'is UP TO DATE', '\x1b[0m');
             } else {
-                console.log('   ---- ', collection, '\x1b[33m%s\x1b[0m', ' NEED UPDATE');
-                collectionsManifest.set(collection, json.Response.jsonWorldComponentContentPaths[language][collection]);
-                count++;
-                if (count > 2) break;
+                console.log(`   ---- ${component}`, '\x1b[33m', 'NEED UPDATE', '\x1b[0m');
+                componentsManifest.set(component, json.Response.jsonWorldComponentContentPaths[language][component]);
+
+		count++;
+		if (count===limit) break;
             }
         }
 
         console.log(`Done...`)
 
-        //console.log(collectionsManifest);
     })
 }
 
-async function downloadManifestCollectionsData() {
+async function downloadManifestComponentsData() {
 
-    for ([key, value] of collectionsManifest) {
-        console.log(`Downloading collection ${key}...`);
-        await downloadCollection(key, value);
-        await mongoImport(key);
+	console.log();
+	console.log();
+	console.log();
+
+    for ([key, value] of componentsManifest) {
+        console.log(`Downloading component ${key}...`);
+        await downloadComponent(key, value);
+        await mongoImportComponent(key);
     };
 
 }
 
 
-function downloadCollection(collectionName, pathTo) {
+function downloadComponent(componentName, pathTo) {
 
-    let fileName = path.join(__dirname, 'downloads', collectionName + '.json');
+    let fileName = path.join(__dirname, 'downloads', componentName + '.json');
 
     const file = fs.createWriteStream(fileName);
     return new Promise((resolve, reject) => {
@@ -67,7 +71,7 @@ function downloadCollection(collectionName, pathTo) {
             // after download completed close filestream
             file.on("finish", () => {
                 file.close();
-                console.log("Download of ${collectionName} completed");
+                console.log(`Download of ${componentName} completed`);
                 resolve();
             });
         })
@@ -76,20 +80,20 @@ function downloadCollection(collectionName, pathTo) {
 
 }
 
-function mongoImport(collectionName) {
+function mongoImportComponent(componentName) {
 
-    console.log(`Move data into database...`);
-    let fileName = path.join(__dirname, 'downloads', collectionName + '.json');
-    //const command = `mongoimport --uri mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin --collection ${collectionName} --type json --file ${fileName} --drop`;
+    console.log(`Move component data into database...`);
+    let fileName = path.join(__dirname, 'downloads', componentName + '.json');
+    //const command = `mongoimport --uri mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin --collection ${componentName} --type json --file ${fileName} --drop`;
 
-    return new Promise(() => {
+    return new Promise((resolve, reject) => {
 
         const cmd = spawn('mongoimport',
             [
                 '--uri',
                 'mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin',
                 '--collection',
-                collectionName,
+                componentName,
                 '--type',
                 'json',
                 '--file',
@@ -98,11 +102,12 @@ function mongoImport(collectionName) {
             ]);
 
         cmd.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
+            console.log(`${data}`);
         });
 
+
         cmd.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
+            console.error(`${data}`);
         });
 
         cmd.on('close', (code) => {
@@ -119,7 +124,7 @@ async function saveDownloadedVersionsInDatabase() {
 
     const collection = client.db('d2lm').collection('savedManifestVersions');
 
-    for ([key, value] of collectionsManifest) {
+    for ([key, value] of componentsManifest) {
 
         filter = { componentName: key }
 
@@ -148,7 +153,7 @@ async function readSavedVersions() {
     const collection = client.db('d2lm').collection('savedManifestVersions');
     await collection.find().forEach((doc) => {
         savedVersions.set(doc.componentName, doc.pathTo);
-        console.log('   --- ', doc.componentName, '  ', doc.pathTo);
+        console.log(`   --- ${doc.componentName} ${doc.pathTo}`);
     });
 
     client.close();
@@ -160,9 +165,9 @@ async function readSavedVersions() {
 (async () => {
 
     const savedVersions = await readSavedVersions();
-    await readManifestCollections(savedVersions);
-    await downloadManifestCollectionsData();
+    await readComponentsManifest(savedVersions);
+    await downloadManifestComponentsData();
     await saveDownloadedVersionsInDatabase();
-    console.log('Operation done');
+    console.log('Operation done successfully');
 
 })()
