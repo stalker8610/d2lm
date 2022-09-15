@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const path = requre('path');
+const path = require('path');
 const { spawn } = require('node:child_process');
 const https = require('https');
 const fs = require('fs');
@@ -18,28 +18,32 @@ async function readManifestCollections() {
     console.log('Manifest fetched.');
 
 
-    for (let language in ['ru']) {
+ let count = 0;
+
+    ['ru'].forEach( (language)=>{ 
 
         console.log('Loading paths for language = ', language);
 
         for (let collection in json.Response.jsonWorldComponentContentPaths[language]) {
             console.log('   ---- ', collection);
-            collectionsManifest.set(collection, { path: json.Response.jsonWorldComponentContentPaths[language][collection], data: null });
+            collectionsManifest.set(collection, json.Response.jsonWorldComponentContentPaths[language][collection]);
+	    count++;
+	    if (count>2) break;
         }
 
         console.log(`Done...`)
 
         //console.log(collectionsManifest);
-    }
+    })
 }
 
-async function downloadManifestCollectionsData(collectionsManifest) {
+async function downloadManifestCollectionsData() {
 
     for ([key, value] of collectionsManifest) {
 
-        console.log(`Downloading collection ${value}...`);
-        await downloadCollection(value, key);
-        await mongoImport(value);
+        console.log(`Downloading collection ${key}...`);
+        //await downloadCollection(key, value);
+        //await mongoImport(key);
 
     };
 
@@ -48,7 +52,7 @@ async function downloadManifestCollectionsData(collectionsManifest) {
 
 function downloadCollection(collectionName, pathTo) {
 
-    let fileName = path.join(__dirname, 'downloads', collectionName);
+    let fileName = path.join(__dirname, 'downloads', collectionName+'.json');
 
 
     const file = fs.createWriteStream(fileName);
@@ -72,7 +76,7 @@ function downloadCollection(collectionName, pathTo) {
 function mongoImport(collectionName) {
 
     console.log(`Move data into database...`);
-    let fileName = path.join(__dirname, 'downloads', collectionName);
+    let fileName = path.join(__dirname, 'downloads', collectionName+'.json');
     //const command = `mongoimport --uri mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin --collection ${collectionName} --type json --file ${fileName}`;
 
     return new Promise(() => {
@@ -86,7 +90,8 @@ function mongoImport(collectionName) {
                 '--type',
                 'json',
                 '--file',
-                fileName
+                fileName,
+		'--drop'
             ]);
 
         cmd.stdout.on('data', (data) => {
