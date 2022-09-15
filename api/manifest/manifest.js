@@ -48,11 +48,19 @@ async function downloadManifestComponentsData() {
     console.log('');
     console.log('');
 
+    const client = new MongoClient('mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin');
+    await client.connect();
+
+    const mongoCollection = client.db('d2lm').collection('savedManifestVersions');
+
     for ([key, value] of componentsManifest) {
         console.log(`Downloading component ${key}...`);
         await downloadComponent(key, value);
         await mongoImportComponent(key);
+        await saveDownloadedVersionsInDatabase(mongoCollection, key, value);
     };
+
+    client.close();
 
 }
 
@@ -122,7 +130,6 @@ async function splitJson(fileName, maxFileSize) {
 }
 
 
-
 async function mongoImportComponent(componentName) {
 
     console.log(`Move component data into database...`);
@@ -190,28 +197,19 @@ async function mongoImportComponent(componentName) {
 
 }
 
-async function saveDownloadedVersionsInDatabase() {
+async function saveDownloadedVersionsInDatabase(mongoCollection, componentName, componentVersion) {
 
-    const client = new MongoClient('mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin');
-    await client.connect();
+    filter = { componentName: componentName }
 
-    const collection = client.db('d2lm').collection('savedManifestVersions');
+    const updateDoc = {
+        $set: {
+            pathTo: componentVersion
+        },
+    };
 
-    for ([key, value] of componentsManifest) {
+    await mongoCollection.updateOne(filter, updateDoc, { upsert: true });
+    console.log('Version of ', componentName, ' saved in db');
 
-        filter = { componentName: key }
-
-        const updateDoc = {
-            $set: {
-                pathTo: value
-            },
-        };
-
-        await collection.updateOne(filter, updateDoc, { upsert: true });
-        console.log('Version of ', key, ' saved in db');
-    }
-
-    client.close();
 }
 
 async function readSavedVersions() {
