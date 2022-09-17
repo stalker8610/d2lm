@@ -6,13 +6,22 @@ const fs = require('fs');
 const fsPromises = fs.promises
 const { MongoClient } = require('mongodb');
 
+const dbConCfg = require('../../dbconnect.config.json');
+const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
 var componentsManifest = new Map();
 
 async function readComponentsManifest(savedVersions) {
 
+    const usefulComponents = [
+        'DestinyClassDefinition',
+        'DestinyInventoryBucketDefinition',
+        'DestinyInventoryItemDefinition'
+    ]
+
+
     console.log('Fetching manifest...');
-    let json = await fetch('https://www.bungie.net/Platform/Destiny2/Manifest')
+    let json = await fetch('https://www.bungie.net/Platform/Destiny2/Manifest', { headers: { 'X-API-Key': BUNGIE_API_KEY } })
         .then(res => res.json())
 
     console.log('Manifest fetched');
@@ -26,8 +35,12 @@ async function readComponentsManifest(savedVersions) {
 
         for (let component in json.Response.jsonWorldComponentContentPaths[language]) {
 
+            // check only useful components
+            if (usefulComponents.findIndex((el) => el === component) < 0) continue;
+
             if (savedVersions.get(component) === json.Response.jsonWorldComponentContentPaths[language][component]) {
                 console.log(`   ---- ${component}`, '\x1b[32m', 'is UP TO DATE', '\x1b[0m');
+
             } else {
                 console.log(`   ---- ${component}`, '\x1b[33m', 'NEED UPDATE', '\x1b[0m');
                 componentsManifest.set(component, json.Response.jsonWorldComponentContentPaths[language][component]);
@@ -35,6 +48,8 @@ async function readComponentsManifest(savedVersions) {
                 count++;
                 if (count === limit) break;
             }
+
+            //componentsManifest.set(component, json.Response.jsonWorldComponentContentPaths[language][component]);
         }
 
         console.log(`Done...`)
@@ -45,10 +60,8 @@ async function readComponentsManifest(savedVersions) {
 async function downloadManifestComponentsData() {
 
     console.log('');
-    console.log('');
-    console.log('');
+    const client = new MongoClient(`mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`);
 
-    const client = new MongoClient('mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin');
     await client.connect();
 
     const mongoCollection = client.db('d2lm').collection('savedManifestVersions');
@@ -67,7 +80,13 @@ async function downloadManifestComponentsData() {
 
 function downloadComponent(componentName, pathTo) {
 
-    let fileName = path.join(__dirname, 'downloads', componentName + '.json');
+    const dirDownloads = path.join(__dirname, 'downloads');
+
+    if (!fs.existsSync(dirDownloads)) {
+        fs.mkdirSync(dirDownloads);
+    }
+
+    let fileName = path.join(dirDownloads, componentName + '.json');
 
     const file = fs.createWriteStream(fileName);
     return new Promise((resolve, reject) => {
@@ -87,6 +106,7 @@ function downloadComponent(componentName, pathTo) {
 
 }
 
+//function convert JSON file from Bungie into JSON array, writeable into mongoDB, as well limit size of output
 async function splitJson(fileName, maxFileSize) {
 
     let resultFileNamesArray = [];
@@ -94,23 +114,23 @@ async function splitJson(fileName, maxFileSize) {
     const data = await fsPromises.readFile(fileName, { encoding: "utf8" });
     let largeJson = JSON.parse(data);
 
-    let resultStr = '{';
+    let resultStr = '[';
     let index = 1;
 
     for (const [key, value] of Object.entries(largeJson)) {
 
-        const entryJson = `${JSON.stringify(key)}:${JSON.stringify(value)}`;
+        const entryJson = JSON.stringify(value);
 
         if ((resultStr + entryJson).length >= maxFileSize) {
 
-            resultStr = resultStr.substring(0, resultStr.length - 1) + '}';
+            resultStr = resultStr.substring(0, resultStr.length - 1) + ']';
 
             let chunkFileName = fileName + index;
             fs.writeFileSync(chunkFileName, resultStr);
 
             resultFileNamesArray.push(chunkFileName);
 
-            resultStr = '{' + entryJson + ',';
+            resultStr = '[' + entryJson + ',';
             index++;
 
         }
@@ -120,7 +140,7 @@ async function splitJson(fileName, maxFileSize) {
 
     }
 
-    resultStr = resultStr.substring(0, resultStr.length - 1) + '}';
+    resultStr = resultStr.substring(0, resultStr.length - 1) + ']';
 
     let chunkFileName = fileName + index;
     fs.writeFileSync(chunkFileName, resultStr);
@@ -132,23 +152,21 @@ async function splitJson(fileName, maxFileSize) {
 
 async function mongoImportComponent(componentName) {
 
-    console.log(`Move component data into database...`);
     let fileName = path.join(__dirname, 'downloads', componentName + '.json');
-    //const command = `mongoimport --uri mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin --collection ${componentName} --type json --file ${fileName} --drop`;
+    //const command = `mongoimport --uri mongodb://user:pswd@127.0.0.1:27017/d2lm?authSource=admin --collection ${componentName} --type json --file ${fileName} --drop`;
 
-    const maxFileSize = 1024 * 1024 * 10; //10Mb
+    const maxFileSize = 1024 * 1024 * 5; //5Mb
 
-    const chunks = [fileName];
+    let chunks = [fileName];
     const fileSize = fs.statSync(fileName).size;
-    let dropCollection = true;
 
-    if (fileSize > maxFileSize) {
-        //split large file for chunks to upload into db
-        console.log(`Split large file for chunks (total size ${fileSize / 1024 / 1024}MB)...`);
-        chunks = await splitJson(fileName, maxFileSize);
-        console.log(`Split complete`);
-        dropCollection = false;
-    }
+    //if (fileSize > maxFileSize) {
+    //split file for chunks to upload into db (do it independently of size to convert format into array)
+    console.log(`Convert file into JSON array, split file for chunks (total size ${(fileSize / 1024 / 1024).toFixed(2)}MB)...`);
+    chunks = await splitJson(fileName, maxFileSize);
+    console.log(`Split complete`);
+
+    //}
 
 
     for (let index = 0; index < chunks.length; index++) {
@@ -161,16 +179,17 @@ async function mongoImportComponent(componentName) {
 
             const args = [
                 '--uri',
-                'mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin',
+                `mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`,
                 '--collection',
                 componentName,
                 '--type',
                 'json',
+                '--jsonArray',
                 '--file',
-                fileName
+                chunkfileName,
             ];
 
-            if (dropCollection || index === 0) args.push['--drop'];
+            if (index === 0) args.push['--drop'];
             const cmd = spawn('mongoimport', args);
 
             cmd.stderr.on('data', (data) => {
@@ -184,16 +203,15 @@ async function mongoImportComponent(componentName) {
         });
     }
 
-    if (chunks.length > 1) {
-        //remove chunks
-        console.log('Flushing chunks...')
 
-        for (let chunkfileName of chunks) {
-            await fsPromises.unlink(chunkfileName);
-        };
+    //remove chunks
+    console.log('Flushing chunks...')
 
-        console.log('Flushing complete');
-    }
+    for (let chunkfileName of chunks) {
+        await fsPromises.unlink(chunkfileName);
+    };
+
+    console.log('Flushing complete');
 
 }
 
@@ -214,17 +232,14 @@ async function saveDownloadedVersionsInDatabase(mongoCollection, componentName, 
 
 async function readSavedVersions() {
 
-    //console.log('Saved versions of components:');
-
     let savedVersions = new Map();
 
-    const client = new MongoClient('mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin');
+    const client = new MongoClient(`mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`);
     await client.connect();
 
     const collection = client.db('d2lm').collection('savedManifestVersions');
     await collection.find().forEach((doc) => {
         savedVersions.set(doc.componentName, doc.pathTo);
-        //console.log(`   --- ${doc.componentName} ${doc.pathTo}`);
     });
 
     client.close();
@@ -238,7 +253,6 @@ async function readSavedVersions() {
     const savedVersions = await readSavedVersions();
     await readComponentsManifest(savedVersions);
     await downloadManifestComponentsData();
-    await saveDownloadedVersionsInDatabase();
     console.log('Operation done successfully');
 
 })()

@@ -1,0 +1,7 @@
+{
+    "server": "77.223.99.173",
+    "port": "27017",
+    "userName": "admin",
+    "password": "abcd",
+    "authSource": "admin"
+}

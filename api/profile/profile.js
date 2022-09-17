@@ -1,7 +1,10 @@
 const express = require('express');
 const fetch = require('node-fetch');
+const { MongoClient } = require('mongodb');
 
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
+
+var mongoClient;
 
 
 const prepareApiRequest = (apiUrl, accessToken) => {
@@ -15,6 +18,20 @@ const prepareApiRequest = (apiUrl, accessToken) => {
             'X-API-Key': BUNGIE_API_KEY
         }
     }
+
+}
+
+
+async function getDataArrayFromDB(collectionName, filter, projection) {
+
+    if (!mongoClient) {
+        mongoClient = new MongoClient(`mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`);
+        await client.connect();
+    }
+
+    const mongoCollection = client.db('d2lm').collection(collectionName);
+
+    return mongoCollection.find(filter).project(projection).toArray();
 
 }
 
@@ -122,13 +139,13 @@ async function getCharactersData(accessToken, storeMembershipData) {
 
 }
 
-async function getEquipmentData(accessToken, storeMembershipData, characterId){
+async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
     let result = [];
 
     const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.storeMembershipType}
                                             /Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}
-                                            ?components=CharacterInventories,CharacterEquipment`, accessToken);
+                                            ?components=CharacterEquipment`, accessToken);
 
     try {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
@@ -137,20 +154,44 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId){
         }
 
         let responseJSON = await response.json();
-        let charactersData = responseJSON.Response.characters.data;
+        let equipmentData = responseJSON.Response.equipment.data.items; //array of items
 
-        for (let key in charactersData) {
+        let itemHashSet = new Set();
 
-            let character = charactersData[key];
-
-            if (character.characterId) {
-                result.push({
-                    id: character.characterId,
-                    classType: character.classType,
-                    light: character.light,
-                    emblemPath: character.emblemPath
+        equipmentData.forEach((el) => {
+            result.push(
+                {
+                    itemHash: el.itemHash,
+                    itemInstanceId: el.itemInstanceId,
+                    location: el.location,
+                    bucketHash: el.bucketHash
                 })
-            }
+
+            itemHashSet.add(el.itemHash);
+
+        }
+        );
+
+        //now append respose by data from definitions
+
+        if (itemHashSet.size > 0) {
+
+            itemHashArray = getDataArrayFromDB('DestinyInventoryItemDefinition',
+                {
+                    hash: {
+                        $in: Array.from(itemHashSet)
+                    }
+                },
+                {
+                    _id: 0,
+                    displayProperties: 1,
+                    itemTypeDisplayName: 1,
+                    'inventory.bucketTypeHash': 1
+                });
+
+            result.forEach((el) => {
+                el.itemHash = itemHashArray.find((elHash) => elHash.hash === el.itemHash);
+            });
 
         }
 
@@ -161,8 +202,6 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId){
         console.log(`Error while getEquipmentData: `, err);
         return result;
     }
-
-
 
 }
 

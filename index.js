@@ -14,6 +14,9 @@ const path = require('path');
 const { authRouter, getAuthUrl } = require('./api/auth/auth');
 const { profileRouter } = require('./api/profile/profile');
 
+const dbConnectConfig = require('./dbconnect.config.json');
+const sslConfig = require('./ssl.config.json');
+
 var app = express();
 
 app.use(session({
@@ -21,17 +24,14 @@ app.use(session({
     saveUninitialized: false,
     secret: 'dd9s02a2f9dsa',
     cookie: { secure: true, sameSite: 'lax' },
-    //store: MongoStore.create({mongoUrl: 'mongodb://admin:abcd@77.223.99.173:27017/d2lm?authSource=admin'})
-    store: MongoStore.create({mongoUrl: 'mongodb://admin:abcd@127.0.0.1:27017/d2lm?authSource=admin'})
+    store: MongoStore.create({mongoUrl: `mongodb://${dbConnectConfig.userName}:${dbConnectConfig.password}@${dbConnectConfig.server}:${dbConnectConfig.port}
+                                        /d2lm?authSource=${dbConnectConfig.authSource}`})
 	
 }));
 
-let keyPath = '/etc/letsencrypt/live/d2lm.ru/privkey.pem';
-let certPath = '/etc/letsencrypt/live/d2lm.ru/fullchain.pem';
-
-const options = {
-    key: fs.readFileSync(keyPath),
-    cert: fs.readFileSync(certPath)
+const sslOptions = {
+    key: fs.readFileSync(sslConfig.keyPath),
+    cert: fs.readFileSync(sslConfig.certPath)
 }
 
 app.use(express.urlencoded())
@@ -72,8 +72,8 @@ app.get('*', async (req, res, next) => {
 })
 
 
-https.createServer(options, app).listen(443, () => console.log(`Server started at port 443`));
-//app.listen(8081);
+https.createServer(sslOptions, app).listen(443, () => console.log(`Server started at port 443`));
+
 
 
 
