@@ -36,7 +36,7 @@ async function getDataArrayFromDB(collectionName, filter, projection) {
 }
 
 
-async function getProfileData(membershipId, accessToken, callback) {
+async function getProfileData(membershipId, accessToken) {
 
     let result = { err: '', user: null };
 
@@ -69,7 +69,7 @@ async function getProfileData(membershipId, accessToken, callback) {
 
 }
 
-async function getStoreMembershipData(membershipId, accessToken, callback) {
+async function getStoreMembershipData(membershipId, accessToken) {
 
     let result = {};
 
@@ -219,6 +219,9 @@ profileRouter.get('/', async (req, res) => {
         else {
 
             const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
+
+            req.session.storeMembershipData = storeMembershipData;
+
             const charactersData = await getCharactersData(req.session.token, storeMembershipData)
 
             const result = {
@@ -230,6 +233,17 @@ profileRouter.get('/', async (req, res) => {
             res.status(200).json(result);
 
         }
+    }
+
+})
+
+profileRouter.get('/equipment', async (req, res)=>{
+
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    } else {
+        const result = getEquipmentData(req.session.token, req.session.storeMembershipData);
+        res.status(200).json(result);
     }
 
 })
