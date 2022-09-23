@@ -24,8 +24,7 @@ app.use(session({
     saveUninitialized: false,
     secret: 'dd9s02a2f9dsa',
     cookie: { secure: true, sameSite: 'lax' },
-    store: MongoStore.create({mongoUrl: `mongodb://${dbConnectConfig.userName}:${dbConnectConfig.password}@${dbConnectConfig.server}:${dbConnectConfig.port}
-                                        /d2lm?authSource=${dbConnectConfig.authSource}`})
+    store: MongoStore.create({mongoUrl: `mongodb://${dbConnectConfig.userName}:${dbConnectConfig.password}@${dbConnectConfig.server}:${dbConnectConfig.port}/d2lm?authSource=${dbConnectConfig.authSource}`})
 	
 }));
 
