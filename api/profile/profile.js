@@ -27,7 +27,8 @@ const prepareApiRequest = (apiUrl, accessToken) => {
 async function getDataArrayFromDB(collectionName, filter, projection) {
 
     if (!mongoClient) {
-        mongoClient = new MongoClient(`mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`);
+        const URL = `mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`;
+        mongoClient = new MongoClient(URL);
         await mongoClient.connect();
     }
 
@@ -104,8 +105,8 @@ async function getCharactersData(accessToken, storeMembershipData) {
 
     let result = [];
 
-    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.storeMembershipType}
-                                            /Profile/${storeMembershipData.storeMembershipId}/?components=Characters`, accessToken);
+    const URL = `/Destiny2/${storeMembershipData.storeMembershipType}` + `/Profile/${storeMembershipData.storeMembershipId}/?components=Characters`;
+    const reqOptions = prepareApiRequest(URL, accessToken);
 
     try {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
@@ -144,10 +145,8 @@ async function getCharactersData(accessToken, storeMembershipData) {
 async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
     let result = [];
-
-    const reqOptions = prepareApiRequest(`/Destiny2/${storeMembershipData.storeMembershipType}
-                                            /Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}
-                                            ?components=CharacterEquipment`, accessToken);
+    const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}?components=CharacterEquipment`;
+    const reqOptions = prepareApiRequest(URL, accessToken);
 
     try {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
@@ -178,7 +177,20 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
         if (itemHashSet.size > 0) {
 
-            itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
+            const buckets = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
+            {
+                location: 1, //inventory
+                category: 3 //equipable
+            },
+            {
+                _id: 0,
+                hash: 1,
+                displayProperties: 1,
+                bucketOrder: 1
+            });
+
+
+            let itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
                 {
                     hash: {
                         $in: Array.from(itemHashSet)
@@ -186,15 +198,17 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
                 },
                 {
                     _id: 0,
-hash: 1,                    
-displayProperties: 1,
-                    itemTypeDisplayName: 1,
-                    'inventory.bucketTypeHash': 1
+                    hash: 1,
+                    displayProperties: 1,
+                    itemTypeDisplayName: 1
                 });
 
+
             result.forEach((el) => {
-                el.data = itemHashArray.find((elHash) => elHash.hash === el.itemHash);
+                el.data = itemHashArray.find((item) => item.hash === el.itemHash);
+                el.data.bucket = buckets.find((bucket) => bucket.hash === el.bucketHash);
             });
+      
 
         }
 
@@ -240,11 +254,11 @@ profileRouter.get('/', async (req, res) => {
 
 })
 
-profileRouter.get('/equipment', async (req, res)=>{
+profileRouter.get('/equipment', async (req, res) => {
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
         res.status(401).json(null);
-    }else {
+    } else {
         const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.query.characterId);
         res.status(200).json(result);
     }
