@@ -2,6 +2,8 @@ const express = require('express');
 const fetch = require('node-fetch');
 const { MongoClient } = require('mongodb');
 
+const dbConCfg = require('../../dbconnect.config.json');
+
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
 var mongoClient;
@@ -26,12 +28,12 @@ async function getDataArrayFromDB(collectionName, filter, projection) {
 
     if (!mongoClient) {
         mongoClient = new MongoClient(`mongodb://${dbConCfg.userName}:${dbConCfg.password}@${dbConCfg.server}:${dbConCfg.port}/d2lm?authSource=${dbConCfg.authSource}`);
-        await client.connect();
+        await mongoClient.connect();
     }
 
-    const mongoCollection = client.db('d2lm').collection(collectionName);
+    const mongoCollection = mongoClient.db('d2lm').collection(collectionName);
 
-    return mongoCollection.find(filter).project(projection).toArray();
+    return await mongoCollection.find(filter).project(projection).toArray();
 
 }
 
@@ -176,7 +178,7 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
         if (itemHashSet.size > 0) {
 
-            itemHashArray = getDataArrayFromDB('DestinyInventoryItemDefinition',
+            itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
                 {
                     hash: {
                         $in: Array.from(itemHashSet)
@@ -184,13 +186,14 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
                 },
                 {
                     _id: 0,
-                    displayProperties: 1,
+hash: 1,                    
+displayProperties: 1,
                     itemTypeDisplayName: 1,
                     'inventory.bucketTypeHash': 1
                 });
 
             result.forEach((el) => {
-                el.itemHash = itemHashArray.find((elHash) => elHash.hash === el.itemHash);
+                el.data = itemHashArray.find((elHash) => elHash.hash === el.itemHash);
             });
 
         }
@@ -241,8 +244,8 @@ profileRouter.get('/equipment', async (req, res)=>{
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
         res.status(401).json(null);
-    } else {
-        const result = getEquipmentData(req.session.token, req.session.storeMembershipData);
+    }else {
+        const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.query.characterId);
         res.status(200).json(result);
     }
 
