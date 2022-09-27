@@ -35,7 +35,7 @@ async function getItemData(accessToken, storeMembershipData, itemId){
                 displayProperties: 1
             }));
 
-            itemPerksData.forEach( (el)=> el.displayProperties = perks.find( (value) => el.perkHash === value.hash) );
+            itemPerksData.forEach( (el)=> Object.assign(el, perks.find( (value) => el.perkHash === value.hash)));
             result.perks = itemPerksData;
 
         }
@@ -51,11 +51,11 @@ async function getItemData(accessToken, storeMembershipData, itemId){
             {
                 _id: 0,
                 hash: 1,
-                displayProperties: 1
+                'displayProperties.name': 1
             }));
 
             Object.entries(itemStatsData).forEach( ([key,value]) => {
-                value.displayProperties = stats.find( (el) => el.hash === value.statHash )
+                Object.assign(value, stats.find( (el) => el.hash === value.statHash ));
             })
 
             result.stats = Object.values(itemStatsData);
