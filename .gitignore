@@ -1,5 +1,5 @@
 
 node_modules
 api/manifest/downloads
-dbconnect.config.json
+api/dbconnect.config.json
 ssl.config.json
