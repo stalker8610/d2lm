@@ -17,16 +17,16 @@ async function getItemData(accessToken, storeMembershipData, itemId){
         }
 
         let responseJSON = await response.json();
-        let itemPerksData = responseJSON.Response.perks.data.perks; //array of items
-        let itemStatsData = responseJSON.Response.stats.data.stats; //set of items
+        let itemPerksData = responseJSON.Response.perks.data.perks.filter((value)=>value.visible); //array of items
+        let itemStatsData = responseJSON.Response.stats.data.stats; //object with keys = hashes
         //let itemSocketsData = responseJSON.Response.sockets.data.sockets //array of items
 
         if (itemPerksData.length > 0) {
 
-            result.perks = (await getDataArrayFromDB('DestinySandboxPerkDefinition',
+            let perks = (await getDataArrayFromDB('DestinySandboxPerkDefinition',
             {
                 hash: {
-                    $in: itemPerksData.filter((value)=>value.visible).map( (el) => { return el.perkHash } )
+                    $in: itemPerksData.map( (el) => { return el.perkHash } )
                 }
             },
             {
@@ -34,11 +34,15 @@ async function getItemData(accessToken, storeMembershipData, itemId){
                 hash: 1,
                 displayProperties: 1
             }));
+
+            itemPerksData.forEach( (el)=> el.displayProperties = perks.find( (value) => el.perkHash === value.hash) );
+            result.perks = itemPerksData;
+
         }
 
         if (Object.keys(itemStatsData).length > 0) {
 
-            result.stats = (await getDataArrayFromDB('DestinyStatDefinition',
+            let stats = (await getDataArrayFromDB('DestinyStatDefinition',
             {
                 hash: {
                     $in: Object.keys(itemStatsData).map(el=>Number(el))
@@ -49,6 +53,12 @@ async function getItemData(accessToken, storeMembershipData, itemId){
                 hash: 1,
                 displayProperties: 1
             }));
+
+            Object.entries(itemStatsData).forEach( ([key,value]) => {
+                value.displayProperties = stats.find( (el) => el.hash === value.statHash )
+            })
+
+            result.stats = Object.values(itemStatsData);
 
         }
 
