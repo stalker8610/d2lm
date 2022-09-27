@@ -55,7 +55,7 @@ async function getItemData(accessToken, storeMembershipData, itemId){
             }));
 
             Object.entries(itemStatsData).forEach( ([key,value]) => {
-                Object.assign(value, stats.find( (el) => el.hash === value.statHash ));
+                Object.assign(value, { name: stats.find( (el) => el.hash === value.statHash )?.displayProperties.name });
             })
 
             result.stats = Object.values(itemStatsData);
