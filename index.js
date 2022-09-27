@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { authRouter, getAuthUrl } = require('./api/auth/auth');
 const { profileRouter } = require('./api/profile/profile');
+const { itemsRouter } = require('./api/items/item');
 
 const dbConnectConfig = require('./dbconnect.config.json');
 const sslConfig = require('./ssl.config.json');
@@ -46,6 +47,7 @@ const generateSession = async (req, res, next) => {
 
 app.use('/auth', authRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/items', itemsRouter);
 
 app.get('/login', generateSession, (req, res)=>{
 
