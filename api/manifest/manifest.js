@@ -16,7 +16,8 @@ async function readComponentsManifest(savedVersions) {
     const usefulComponents = [
         'DestinyClassDefinition',
         'DestinyInventoryBucketDefinition',
-        'DestinyInventoryItemDefinition'
+        'DestinyInventoryItemDefinition',
+	'DestinyPerkReference'
     ]
 
 
