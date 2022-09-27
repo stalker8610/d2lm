@@ -15,7 +15,7 @@ const { authRouter, getAuthUrl } = require('./api/auth/auth');
 const { profileRouter } = require('./api/profile/profile');
 const { itemsRouter } = require('./api/items/item');
 
-const dbConnectConfig = require('./dbconnect.config.json');
+const dbConnectConfig = require('./api/dbconnect.config.json');
 const sslConfig = require('./ssl.config.json');
 
 var app = express();

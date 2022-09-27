@@ -7,7 +7,7 @@ let itemsRouter = express();
 async function getItemData(accessToken, storeMembershipData, itemId){
 
     let result = { };
-    const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Item/{itemId}?components=ItemPerks,ItemStats`;
+    const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Item/${itemId}?components=ItemPerks,ItemStats`;
     const reqOptions = prepareApiRequest(URL, accessToken);
 
     try {
@@ -26,7 +26,7 @@ async function getItemData(accessToken, storeMembershipData, itemId){
             result.perks = (await getDataArrayFromDB('DestinySandboxPerkDefinition',
             {
                 hash: {
-                    $in: itemPerksData.map( (el) => { if (el.isVisible) return el.perkHash } )
+                    $in: itemPerksData.filter((value)=>value.visible).map( (el) => { return el.perkHash } )
                 }
             },
             {
@@ -36,12 +36,12 @@ async function getItemData(accessToken, storeMembershipData, itemId){
             }));
         }
 
-        if (itemStatsData.length > 0) {
+        if (Object.keys(itemStatsData).length > 0) {
 
             result.stats = (await getDataArrayFromDB('DestinyStatDefinition',
             {
                 hash: {
-                    $in: itemStatsData.keys()
+                    $in: Object.keys(itemStatsData).map(el=>Number(el))
                 }
             },
             {
