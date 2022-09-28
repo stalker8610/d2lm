@@ -187,6 +187,70 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 }
 
 
+async function getBucketEquipmentData(accessToken, storeMembershipData, characterId, bucketHash) {
+    
+    let result = [];
+    const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}?components=CharacterInventories`;
+    const reqOptions = prepareApiRequest(URL, accessToken);
+
+    try {
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
+        if (response.status == 401) {
+            throw Error('Not authorized');
+        }
+
+        let responseJSON = await response.json();
+        let equipmentData = responseJSON.Response.inventory.data.items.filter( (item) => (item.bucketHash === bucketHash)); //array of items
+
+        let itemHashSet = new Set();
+
+        equipmentData.forEach((el) => {
+            result.push(
+                {
+                    itemHash: el.itemHash,
+                    itemInstanceId: el.itemInstanceId,
+                    location: el.location,
+                    bucketHash: el.bucketHash
+                })
+
+            itemHashSet.add(el.itemHash);
+
+        }
+        );
+
+        //now append respose by data from definitions
+
+        if (itemHashSet.size > 0) {
+
+            let itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
+                {
+                    hash: {
+                        $in: Array.from(itemHashSet)
+                    }
+                },
+                {
+                    _id: 0,
+                    hash: 1,
+                    displayProperties: 1,
+                    itemTypeDisplayName: 1
+                });
+
+
+            result.forEach((el) => {
+                el.data = itemHashArray.find((item) => item.hash === el.itemHash);
+            });
+
+        }
+
+        return result;
+
+    } catch (err) {
+        result.err = err;
+        console.log(`Error while getBucketEquipmentData: `, err);
+        return result;
+    }
+}
+
 let profileRouter = express();
 
 profileRouter.get('/', async (req, res) => {
@@ -227,6 +291,15 @@ profileRouter.get('/equipment', async (req, res) => {
         res.status(200).json(result);
     }
 
+})
+
+profileRouter.get('/equipment/bucket/:bucketHash', async (req, res) => {
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    } else {
+        const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.query.characterId, req.params.bucketHash);
+        res.status(200).json(result);
+    }
 })
 
 module.exports = { profileRouter }
