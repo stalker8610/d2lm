@@ -253,6 +253,27 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 
 let profileRouter = express();
 
+
+profileRouter.get('/:characterId/equipment/bucket/:bucketHash', async (req, res) => {
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    } else {
+        const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
+        res.status(200).json(result);
+    }
+})
+
+profileRouter.get('/:characterId/equipment', async (req, res) => {
+
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    } else {
+        const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId);
+        res.status(200).json(result);
+    }
+
+})
+
 profileRouter.get('/', async (req, res) => {
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
@@ -280,26 +301,6 @@ profileRouter.get('/', async (req, res) => {
         }
     }
 
-})
-
-profileRouter.get('/equipment', async (req, res) => {
-
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
-        res.status(401).json(null);
-    } else {
-        const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.query.characterId);
-        res.status(200).json(result);
-    }
-
-})
-
-profileRouter.get('/equipment/bucket/:bucketHash', async (req, res) => {
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
-        res.status(401).json(null);
-    } else {
-        const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.query.characterId, req.params.bucketHash);
-        res.status(200).json(result);
-    }
 })
 
 module.exports = { profileRouter }
