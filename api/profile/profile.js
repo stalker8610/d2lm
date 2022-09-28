@@ -200,7 +200,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         }
 
         let responseJSON = await response.json();
-        let equipmentData = responseJSON.Response.inventory.data.items.filter( (item) => (item.bucketHash === bucketHash)); //array of items
+        let equipmentData = responseJSON.Response.inventory.data.items.filter( (item) => (item.bucketHash == bucketHash)); //array of items
 
         let itemHashSet = new Set();
 
@@ -218,7 +218,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         }
         );
 
-        //now append respose by data from definitions
+        //now append response by data from definitions
 
         if (itemHashSet.size > 0) {
 
