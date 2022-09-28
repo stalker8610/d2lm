@@ -254,7 +254,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 let profileRouter = express();
 
 
-profileRouter.get('/:characterId/equipment/bucket/:bucketHash', async (req, res) => {
+profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', async (req, res) => {
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
         res.status(401).json(null);
     } else {
@@ -263,7 +263,7 @@ profileRouter.get('/:characterId/equipment/bucket/:bucketHash', async (req, res)
     }
 })
 
-profileRouter.get('/:characterId/equipment', async (req, res) => {
+profileRouter.get('/character/:characterId/equipment', async (req, res) => {
 
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
         res.status(401).json(null);
