@@ -30,8 +30,6 @@ function getToken(code, cb) {
         body: 'grant_type=' + encodeURIComponent(grant_type) + '&code=' + encodeURIComponent(code) + '&client_id=' + encodeURIComponent(BUNGIE_CLIENT_ID)
     }
 
- options.headers['Content-Length']=options.body.length;
-
     fetch(urlGetToken, options)
         .then(response => response.json())
         .then(responseJSON => cb(responseJSON));
@@ -69,7 +67,7 @@ authRouter.get('/getAuthUrl', (req, res) => {
 }) */
 
 function checkAuth(req, res, next){
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
         res.status(401).json(null);
     }else{
         next();
