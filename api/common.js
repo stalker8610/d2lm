@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import * as dbConCfg from './dbconnect.config.json' assert { type: "json" };
+import dbConCfg from './dbconnect.config.json' assert { type: "json" };
 
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 

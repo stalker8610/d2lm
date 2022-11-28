@@ -1,5 +1,5 @@
 import express from 'express';
-//const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 var authRouter = express();
 
@@ -29,6 +29,8 @@ function getToken(code, cb) {
         },
         body: 'grant_type=' + encodeURIComponent(grant_type) + '&code=' + encodeURIComponent(code) + '&client_id=' + encodeURIComponent(BUNGIE_CLIENT_ID)
     }
+
+ options.headers['Content-Length']=options.body.length;
 
     fetch(urlGetToken, options)
         .then(response => response.json())
