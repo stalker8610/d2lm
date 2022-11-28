@@ -155,21 +155,15 @@ async function splitJson(fileName, maxFileSize) {
 async function mongoImportComponent(componentName) {
 
     let fileName = path.join(__dirname, 'downloads', componentName + '.json');
-    //const command = `mongoimport --uri mongodb://user:pswd@127.0.0.1:27017/d2lm?authSource=admin --collection ${componentName} --type json --file ${fileName} --drop`;
-
     const maxFileSize = 1024 * 1024 * 5; //5Mb
 
     let chunks = [fileName];
     const fileSize = fs.statSync(fileName).size;
 
-    //if (fileSize > maxFileSize) {
-    //split file for chunks to upload into db (do it independently of size to convert format into array)
+    //split file for chunks to upload into db
     console.log(`Convert file into JSON array, split file for chunks (total size ${(fileSize / 1024 / 1024).toFixed(2)}MB)...`);
     chunks = await splitJson(fileName, maxFileSize);
     console.log(`Split complete`);
-
-    //}
-
 
     for (let index = 0; index < chunks.length; index++) {
 
@@ -191,7 +185,7 @@ async function mongoImportComponent(componentName) {
                 chunkfileName,
             ];
 
-            if (index === 0) args.push['--drop'];
+            if (index === 0) args.push['--drop']; //drop collection before first chunk will imported
             const cmd = spawn('mongoimport', args);
 
             cmd.stderr.on('data', (data) => {
