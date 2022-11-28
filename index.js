@@ -4,14 +4,14 @@ import express from 'express';
 
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { authRouter, getAuthUrl } from './api/auth/auth.js';
 import { profileRouter } from './api/profile/profile.js';
 import { itemsRouter } from './api/items/item.js';
 
-import * as dbConnectConfig from './api/dbconnect.config.json' assert {type: "json"};
-import * as sslConfig from './ssl.config.json' assert {type: "json"};
+import dbConnectConfig from './api/dbconnect.config.json' assert {type: "json"};
+import sslConfig from './ssl.config.json' assert {type: "json"};
 
 var app = express();
 
@@ -23,6 +23,8 @@ app.use(session({
     store: MongoStore.create({mongoUrl: `mongodb://${dbConnectConfig.userName}:${dbConnectConfig.password}@${dbConnectConfig.server}:${dbConnectConfig.port}/d2lm?authSource=${dbConnectConfig.authSource}`})
 	
 }));
+
+const __dirname = path.resolve();
 
 const sslOptions = {
     key: fs.readFileSync(sslConfig.keyPath),
