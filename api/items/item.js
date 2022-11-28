@@ -1,6 +1,6 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const { prepareApiRequest, getDataArrayFromDB } = require('../common');
+import express from 'express';
+//const fetch = require('node-fetch');
+import { prepareApiRequest, getDataArrayFromDB } from '../common.js';
 
 let itemsRouter = express();
 
@@ -83,4 +83,14 @@ itemsRouter.get('/:itemId', async (req, res)=>{
     }
 })
 
-module.exports = { itemsRouter }
+itemsRouter.get('/:itemId', async (req, res)=>{
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    } else {
+        const result = await getItemData(req.session.token, req.session.storeMembershipData, req.params.itemId);
+        res.status(200).json(result);
+    }
+})
+
+
+export { itemsRouter }

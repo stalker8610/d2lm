@@ -1,5 +1,5 @@
-const { MongoClient } = require('mongodb');
-const dbConCfg = require('./dbconnect.config.json');
+import { MongoClient } from 'mongodb';
+import * as dbConCfg from './dbconnect.config.json' assert { type: "json" };
 
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
@@ -35,4 +35,4 @@ async function getDataArrayFromDB(collectionName, filter, projection) {
 
 }
 
-module.exports = { prepareApiRequest, getDataArrayFromDB }
+export { prepareApiRequest, getDataArrayFromDB }

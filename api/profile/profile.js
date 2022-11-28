@@ -1,6 +1,6 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const { prepareApiRequest, getDataArrayFromDB } = require('../common');
+import express from 'express';
+//const fetch = require('node-fetch');
+import { prepareApiRequest, getDataArrayFromDB } from '../common.js';
 
 
 async function getProfileData(membershipId, accessToken) {
@@ -303,5 +303,5 @@ profileRouter.get('/', async (req, res) => {
 
 })
 
-module.exports = { profileRouter }
+export { profileRouter }
 

@@ -1,5 +1,5 @@
-const express = require('express')
-const fetch = require('node-fetch');
+import express from 'express';
+//const fetch = require('node-fetch');
 
 var authRouter = express();
 
@@ -66,6 +66,14 @@ authRouter.get('/getAuthUrl', (req, res) => {
 
 }) */
 
+function checkAuth(req, res, next){
+    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
+        res.status(401).json(null);
+    }else{
+        next();
+    }
+}
+
 authRouter.get('/', (req, res, next) => {
 
     if (req.query.state && decodeURIComponent(req.query.state) == req.sessionID) {
@@ -102,4 +110,4 @@ authRouter.get('/', (req, res, next) => {
 })
 
 
-module.exports = { getAuthUrl, authRouter };
+export { getAuthUrl, checkAuth, authRouter }

@@ -1,22 +1,17 @@
-let https;
-try {
-    https = require('https');
-} catch (err) {
-    console.log('https support is disabled!');
-    process.exit(1);
-}
+import * as https from 'node:https';
 
-const express = require('express');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const fs = require('fs');
-const path = require('path');
-const { authRouter, getAuthUrl } = require('./api/auth/auth');
-const { profileRouter } = require('./api/profile/profile');
-const { itemsRouter } = require('./api/items/item');
+import express from 'express';
 
-const dbConnectConfig = require('./api/dbconnect.config.json');
-const sslConfig = require('./ssl.config.json');
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { authRouter, getAuthUrl } from './api/auth/auth.js';
+import { profileRouter } from './api/profile/profile.js';
+import { itemsRouter } from './api/items/item.js';
+
+import * as dbConnectConfig from './api/dbconnect.config.json' assert {type: "json"};
+import * as sslConfig from './ssl.config.json' assert {type: "json"};
 
 var app = express();
 
