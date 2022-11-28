@@ -24,7 +24,7 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         result.itemHash = responseJSON.Response.item.data.itemHash;
         result.itemInstanceId = responseJSON.Response.item.data.itemInstanceId;
         result.isEquipped = responseJSON.Response.instance.data.isEquipped;
-        result.itemLevel = responseJSON.Response.instance.data.itemLevel;
+        result.itemLevel = responseJSON.Response.instance.data.primaryStat.value;
         
         let itemPerksData = responseJSON.Response.perks.data.perks.filter((value) => value.visible); //array of items
         let itemStatsData = responseJSON.Response.stats.data.stats; //object with keys = hashes
