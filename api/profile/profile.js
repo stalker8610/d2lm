@@ -1,6 +1,7 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import { prepareApiRequest, getDataArrayFromDB } from '../common.js';
+import { checkAuth } from '../auth/auth.js'
 
 
 async function getProfileData(membershipId, accessToken) {
@@ -142,16 +143,16 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
         if (itemHashSet.size > 0) {
 
             const buckets = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
-            {
-                location: 1, //inventory
-                category: 3 //equipable
-            },
-            {
-                _id: 0,
-                hash: 1,
-                displayProperties: 1,
-                bucketOrder: 1
-            });
+                {
+                    location: 1, //inventory
+                    category: 3 //equipable
+                },
+                {
+                    _id: 0,
+                    hash: 1,
+                    displayProperties: 1,
+                    bucketOrder: 1
+                });
 
 
             let itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
@@ -172,7 +173,7 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
                 el.data = itemHashArray.find((item) => item.hash === el.itemHash);
                 el.data.bucket = buckets.find((bucket) => bucket.hash === el.bucketHash);
             });
-      
+
 
         }
 
@@ -188,7 +189,7 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
 
 async function getBucketEquipmentData(accessToken, storeMembershipData, characterId, bucketHash) {
-    
+
     let result = [];
     const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}?components=CharacterInventories`;
     const reqOptions = prepareApiRequest(URL, accessToken);
@@ -200,7 +201,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         }
 
         let responseJSON = await response.json();
-        let equipmentData = responseJSON.Response.inventory.data.items.filter( (item) => (item.bucketHash == bucketHash)); //array of items
+        let equipmentData = responseJSON.Response.inventory.data.items.filter((item) => (item.bucketHash == bucketHash)); //array of items
 
         let itemHashSet = new Set();
 
@@ -254,51 +255,36 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 let profileRouter = express();
 
 
-profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', async (req, res) => {
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
-        res.status(401).json(null);
-    } else {
-        const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
-        res.status(200).json(result);
-    }
+profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', checkAuth, async (req, res) => {
+    const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
+    res.status(200).json(result);
 })
 
-profileRouter.get('/character/:characterId/equipment', async (req, res) => {
-
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date()) || !req.session.storeMembershipData) {
-        res.status(401).json(null);
-    } else {
-        const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId);
-        res.status(200).json(result);
-    }
-
+profileRouter.get('/character/:characterId/equipment', checkAuth, async (req, res) => {
+    const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId);
+    res.status(200).json(result);
 })
 
-profileRouter.get('/', async (req, res) => {
+profileRouter.get('/', checkAuth, async (req, res) => {
 
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
+    const profileData = await getProfileData(req.session.membership_id, req.session.token);
+
+    if (profileData.err) {
         res.status(401).json(null);
     } else {
-        const profileData = await getProfileData(req.session.membership_id, req.session.token);
+        const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
 
-        if (profileData.err) res.status(401).json(null);
-        else {
+        req.session.storeMembershipData = storeMembershipData;
 
-            const storeMembershipData = await getStoreMembershipData(req.session.membership_id, req.session.token);
+        const charactersData = await getCharactersData(req.session.token, storeMembershipData)
 
-            req.session.storeMembershipData = storeMembershipData;
+        const result = {
+            main: profileData.user,
+            storeMembership: storeMembershipData,
+            characters: [...charactersData]
+        };
 
-            const charactersData = await getCharactersData(req.session.token, storeMembershipData)
-
-            const result = {
-                main: profileData.user,
-                storeMembership: storeMembershipData,
-                characters: [...charactersData]
-            };
-
-            res.status(200).json(result);
-
-        }
+        res.status(200).json(result);
     }
 
 })

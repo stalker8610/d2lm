@@ -1,12 +1,12 @@
-const fetch = require('node-fetch');
-const path = require('path');
-const { spawn } = require('node:child_process');
-const https = require('https');
-const fs = require('fs');
-const fsPromises = fs.promises
-const { MongoClient } = require('mongodb');
+import fetch from 'node-fetch';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+import https from 'node:https';
+import fs from 'fs';
+import { promises as fsPromises} from 'fs'
+import { MongoClient } from 'mongodb';
 
-const dbConCfg = require('../dbconnect.config.json');
+import dbConCfg from '../dbconnect.config.json' assert {type: "json"};
 const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
 var componentsManifest = new Map();
