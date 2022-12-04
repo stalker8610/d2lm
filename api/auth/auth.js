@@ -1,4 +1,6 @@
+import { resolveSoa } from 'dns';
 import express from 'express';
+import { rmSync } from 'fs';
 import fetch from 'node-fetch';
 
 var authRouter = express();
@@ -73,6 +75,7 @@ function checkAuth(req, res, next){
         next();
     }
 }
+
 
 authRouter.get('/', (req, res, next) => {
 
