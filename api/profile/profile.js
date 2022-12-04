@@ -165,7 +165,8 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
                     _id: 0,
                     hash: 1,
                     displayProperties: 1,
-                    itemTypeDisplayName: 1
+                    itemTypeDisplayName: 1,
+                    screenshot: 1,
                 });
 
 
