@@ -19,13 +19,13 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         }
 
         let responseJSON = await response.json();
-        
+
         result.characterId = responseJSON.Response.characterId;
         result.itemHash = responseJSON.Response.item.data.itemHash;
         result.itemInstanceId = responseJSON.Response.item.data.itemInstanceId;
         result.isEquipped = responseJSON.Response.instance.data.isEquipped;
         result.itemLevel = responseJSON.Response.instance.data.primaryStat.value;
-        
+
         let itemPerksData = responseJSON.Response.perks.data.perks.filter((value) => value.visible); //array of items
         let itemStatsData = responseJSON.Response.stats.data.stats; //object with keys = hashes
         //let itemSocketsData = responseJSON.Response.sockets.data.sockets //array of items
@@ -71,6 +71,19 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
 
         }
 
+        let itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
+            {
+                hash: result.itemHash
+            },
+            {
+                _id: 0,
+                hash: 1,
+                displayProperties: 1,
+                itemTypeDisplayName: 1,
+                screenshot: 1,
+            });
+
+        result = { ...result, ...itemHashArray[0]}
 
         return result;
 
@@ -98,8 +111,8 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
     try {
         let response = await fetch(reqOptions.url,
             {
-                headers: reqOptions.headers, 
-                method: 'POST', 
+                headers: reqOptions.headers,
+                method: 'POST',
                 body: reqBody
             })
 
@@ -108,7 +121,7 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
         }
 
         let responseJSON = await response.json();
-        
+
         return responseJSON;
 
     } catch (err) {
