@@ -68,15 +68,19 @@ authRouter.get('/getAuthUrl', (req, res) => {
 
 }) */
 
+function isAuthorized(req){
+    return (req.session && req.session.token && (req.session.token_expired_at > new Date())); 
+}
+
 function  checkAuth(req, res, next){
-    if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
+    console.log('check auth insert')
+    if (!isAuthorized()) {
         console.log('checkAuth failed, send 401 Not authorized')
         res.status(401).json(null);
     }else{
         next();
     }
 }
-
 
 authRouter.get('/', (req, res, next) => {
 
@@ -113,5 +117,8 @@ authRouter.get('/', (req, res, next) => {
 
 })
 
+authRouter.get('/isAauthorized', (req, res)=>{
+    res.status(200).json({isAuthorized: isAuthorized(req)}); 
+})
 
 export { getAuthUrl, checkAuth, authRouter }
