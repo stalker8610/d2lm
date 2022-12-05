@@ -82,6 +82,10 @@ function  checkAuth(req, res, next){
     }
 }
 
+authRouter.get('/isAauthorized', (req, res)=>{
+    res.status(200).json({isAuthorized: isAuthorized(req)}); 
+})
+
 authRouter.get('/', (req, res, next) => {
 
     if (req.query.state && decodeURIComponent(req.query.state) == req.sessionID) {
@@ -117,8 +121,6 @@ authRouter.get('/', (req, res, next) => {
 
 })
 
-authRouter.get('/isAauthorized', (req, res)=>{
-    res.status(200).json({isAuthorized: isAuthorized(req)}); 
-})
+
 
 export { getAuthUrl, checkAuth, authRouter }
