@@ -68,8 +68,9 @@ authRouter.get('/getAuthUrl', (req, res) => {
 
 }) */
 
-function checkAuth(req, res, next){
+function  checkAuth(req, res, next){
     if (!req.session || !req.session.token || (req.session.token_expired_at < new Date())) {
+        console.log('checkAuth failed, send 401 Not authorized')
         res.status(401).json(null);
     }else{
         next();
