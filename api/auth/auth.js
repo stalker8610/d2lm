@@ -69,7 +69,7 @@ authRouter.get('/getAuthUrl', (req, res) => {
 }) */
 
 function isAuthorized(req){
-    return (req.session && req.session.token && (req.session.token_expired_at > new Date())); 
+    return Boolean(req.session) && Boolean(req.session.token) && (req.session.token_expired_at > new Date()); 
 }
 
 function  checkAuth(req, res, next){
