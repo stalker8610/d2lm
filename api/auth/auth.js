@@ -73,9 +73,8 @@ function isAuthorized(req){
 }
 
 function  checkAuth(req, res, next){
-    console.log('check auth insert')
     if (!isAuthorized(req)) {
-        console.log('checkAuth failed, send 401 Not authorized')
+        console.log('checkAuth failed, sent 401 Not authorized')
         res.status(401).json(null);
     }else{
         next();
