@@ -26,49 +26,51 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         result.isEquipped = responseJSON.Response.instance.data.isEquipped;
         result.itemLevel = responseJSON.Response.instance.data.primaryStat.value;
 
-        let itemPerksData = responseJSON.Response.perks.data.perks.filter((value) => value.visible); //array of items
-        let itemStatsData = responseJSON.Response.stats.data.stats; //object with keys = hashes
-        //let itemSocketsData = responseJSON.Response.sockets.data.sockets //array of items
+        if (responseJSON.Response.perks.data) {
+            let itemPerksData = responseJSON.Response.perks.data.perks.filter((value) => value.visible); //array of items
+            if (itemPerksData.length > 0) {
 
-        if (itemPerksData.length > 0) {
+                let perks = (await getDataArrayFromDB('DestinySandboxPerkDefinition',
+                    {
+                        hash: {
+                            $in: itemPerksData.map((el) => { return el.perkHash })
+                        }
+                    },
+                    {
+                        _id: 0,
+                        hash: 1,
+                        displayProperties: 1
+                    }));
 
-            let perks = (await getDataArrayFromDB('DestinySandboxPerkDefinition',
-                {
-                    hash: {
-                        $in: itemPerksData.map((el) => { return el.perkHash })
-                    }
-                },
-                {
-                    _id: 0,
-                    hash: 1,
-                    displayProperties: 1
-                }));
+                itemPerksData.forEach((el) => Object.assign(el, perks.find((value) => el.perkHash === value.hash)));
+                result.perks = itemPerksData;
 
-            itemPerksData.forEach((el) => Object.assign(el, perks.find((value) => el.perkHash === value.hash)));
-            result.perks = itemPerksData;
-
+            }
         }
 
-        if (Object.keys(itemStatsData).length > 0) {
+        if (responseJSON.Response.stats.data) {
+            let itemStatsData = responseJSON.Response.stats.data.stats;
+            if (Object.keys(itemStatsData).length > 0) {
 
-            let stats = (await getDataArrayFromDB('DestinyStatDefinition',
-                {
-                    hash: {
-                        $in: Object.keys(itemStatsData).map(el => Number(el))
-                    }
-                },
-                {
-                    _id: 0,
-                    hash: 1,
-                    'displayProperties.name': 1
-                }));
+                let stats = (await getDataArrayFromDB('DestinyStatDefinition',
+                    {
+                        hash: {
+                            $in: Object.keys(itemStatsData).map(el => Number(el))
+                        }
+                    },
+                    {
+                        _id: 0,
+                        hash: 1,
+                        'displayProperties.name': 1
+                    }));
 
-            Object.entries(itemStatsData).forEach(([key, value]) => {
-                Object.assign(value, { name: stats.find((el) => el.hash === value.statHash)?.displayProperties.name });
-            })
+                Object.entries(itemStatsData).forEach(([key, value]) => {
+                    Object.assign(value, { name: stats.find((el) => el.hash === value.statHash)?.displayProperties.name });
+                })
 
-            result.stats = Object.values(itemStatsData);
+                result.stats = Object.values(itemStatsData);
 
+            }
         }
 
         let itemHashArray = await getDataArrayFromDB('DestinyInventoryItemDefinition',
@@ -83,7 +85,7 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
                 screenshot: 1,
             });
 
-        result = { ...result, ...itemHashArray[0]}
+        result = { ...result, ...itemHashArray[0] }
 
         return result;
 
