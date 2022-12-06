@@ -255,9 +255,24 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 
 let profileRouter = express();
 
-
 profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', checkAuth, async (req, res) => {
     const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
+    res.status(200).json(result);
+})
+
+profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, res) => {
+
+    const [postmasterBucketHash] = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
+        {
+            location: 4 //postmaster
+        },
+        {
+            _id: 0,
+            hash: 1
+        });
+
+    /* const postmasterBucketHash = '215593132'; */
+    const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, postmasterBucketHash);
     res.status(200).json(result);
 })
 
