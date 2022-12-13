@@ -78,8 +78,9 @@ async function getCharactersData(accessToken, storeMembershipData) {
         if (response.status == 401) {
             throw Error('Not authorized');
         } else if (response.status == 503) {
-            result.err = await response.json().Message;
-            console.log(`Error while getCharactersData (status 503): ${result.err}`);
+            let responseJSON = await response.json();
+            result.err = responseJSON.Message;
+            console.log(`Error while getCharactersData (status 503): ${responseJSON.Message}`);
             return result;
         }
 
