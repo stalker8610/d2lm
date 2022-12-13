@@ -77,6 +77,10 @@ async function getCharactersData(accessToken, storeMembershipData) {
         let response = await fetch(reqOptions.url, { headers: reqOptions.headers })
         if (response.status == 401) {
             throw Error('Not authorized');
+        } else if (response.status == 503) {
+            result.err = await response.json().Message;
+            console.log(`Error while getCharactersData (status 503): ${result.err}`);
+            return result;
         }
 
         let responseJSON = await response.json();
@@ -294,13 +298,18 @@ profileRouter.get('/', checkAuth, async (req, res) => {
 
         const charactersData = await getCharactersData(req.session.token, storeMembershipData)
 
-        const result = {
-            main: profileData.user,
-            storeMembership: storeMembershipData,
-            characters: [...charactersData]
-        };
+        if (charactersData.err) {
+            res.status(200).json({ error: charactersData.err });
+        } else {
 
-        res.status(200).json(result);
+            const result = {
+                main: profileData.user,
+                storeMembership: storeMembershipData,
+                characters: [...charactersData]
+            };
+
+            res.status(200).json(result);
+        }
     }
 
 })
