@@ -277,7 +277,7 @@ profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, r
         });
 
     /* const postmasterBucketHash = '215593132'; */
-    const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, postmasterBucketHash);
+    const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, postmasterBucketHash.hash);
     res.status(200).json(result);
 })
 
