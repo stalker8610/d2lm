@@ -215,7 +215,7 @@ async function mongoImportComponent(componentName) {
 
 async function saveDownloadedVersionsInDatabase(mongoCollection, componentName, componentVersion) {
 
-    filter = { componentName: componentName }
+    const filter = { componentName: componentName }
 
     const updateDoc = {
         $set: {
