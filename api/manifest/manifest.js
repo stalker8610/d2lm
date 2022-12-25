@@ -11,6 +11,8 @@ const BUNGIE_API_KEY = 'ed47e3f48b054bd5a323af81c1990a78'
 
 var componentsManifest = new Map();
 
+const __dirname = path.resolve();
+
 async function readComponentsManifest(savedVersions) {
 
     const usefulComponents = [
