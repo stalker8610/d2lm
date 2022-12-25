@@ -187,7 +187,7 @@ async function mongoImportComponent(componentName) {
                 chunkfileName,
             ];
 
-            if (index === 0) args.push['--drop']; //drop collection before first chunk will imported
+            if (index === 0) args.push('--drop'); //drop collection before first chunk will imported
             const cmd = spawn('mongoimport', args);
 
             cmd.stderr.on('data', (data) => {
