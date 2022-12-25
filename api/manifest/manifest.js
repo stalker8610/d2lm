@@ -31,7 +31,7 @@ async function readComponentsManifest(savedVersions) {
     const limit = 100;
     let count = 0;
 
-    ['ru'].forEach((language) => {
+    ['en'].forEach((language) => {
 
         console.log(`Loading paths for language \'${language}\'`);
 
@@ -68,7 +68,7 @@ async function downloadManifestComponentsData() {
 
     const mongoCollection = client.db('d2lm').collection('savedManifestVersions');
 
-    for ([key, value] of componentsManifest) {
+    for (const [key, value] of componentsManifest) {
         console.log(`Downloading component ${key}...`);
         await downloadComponent(key, value);
         await mongoImportComponent(key);
