@@ -269,7 +269,7 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         itemReferenceHash,
         itemId,
         characterId,
-        membershipType: storeMembershipData.membershipType,
+        membershipType: storeMembershipData.storeMembershipType,
     }
 
     try {
