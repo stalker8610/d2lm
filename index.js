@@ -32,7 +32,6 @@ const sslOptions = {
 }
 
 app.use(express.urlencoded())
-app.use(express.json())
 app.use(express.static(path.join(__dirname, 'client/')));
 
 const generateSession = async (req, res, next) => {
