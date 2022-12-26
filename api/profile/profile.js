@@ -217,7 +217,8 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
                     itemHash: el.itemHash,
                     itemInstanceId: el.itemInstanceId,
                     location: el.location,
-                    bucketHash: el.bucketHash
+                    bucketHash: el.bucketHash,
+                    quantity: el.quantity,
                 })
 
             itemHashSet.add(el.itemHash);
