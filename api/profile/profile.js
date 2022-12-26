@@ -273,7 +273,11 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
     }
 
     try {
-        let response = await fetch(reqOptions.url, { headers: reqOptions.headers, body: reqBody })
+        let response = await fetch(reqOptions.url, {
+            method: 'POST',
+            headers: { ...reqOptions.headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(reqBody)
+        })
         if (response.status == 401) {
             throw Error('Not authorized');
         }
@@ -313,7 +317,7 @@ profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, r
     res.status(200).json(result);
 })
 
-profileRouter.post('/character/:characterId/postmaster/take', checkAuth, async (req, res)=>{
+profileRouter.post('/character/:characterId/postmaster/take', checkAuth, async (req, res) => {
 
     const { itemHash, itemInstanceId } = req.body;
 
