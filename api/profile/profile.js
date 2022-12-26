@@ -258,6 +258,36 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
     }
 }
 
+
+
+async function pullFromPostmaster(accessToken, storeMembershipData, characterId, itemReferenceHash, itemId) {
+
+    const URL = '/Destiny2/Actions/Items/PullFromPostmaster/';
+    const reqOptions = prepareApiRequest(URL, accessToken);
+    const reqBody = {
+        itemReferenceHash,
+        itemId,
+        characterId,
+        membershipType: storeMembershipData.membershipType,
+    }
+
+    try {
+        let response = await fetch(reqOptions.url, { headers: reqOptions.headers, body: reqBody })
+        if (response.status == 401) {
+            throw Error('Not authorized');
+        }
+
+        let responseJSON = await response.json();
+        return responseJSON;
+
+    } catch (err) {
+        result.err = err;
+        console.log(`Error while pullFromPostmaster: `, err);
+        return result;
+    }
+}
+
+
 let profileRouter = express();
 
 profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', checkAuth, async (req, res) => {
@@ -278,6 +308,14 @@ profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, r
 
     /* const postmasterBucketHash = '215593132'; */
     const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, postmasterBucketHash.hash);
+    res.status(200).json(result);
+})
+
+profileRouter.post('/character/:characterId/postmaster/take', checkAuth, async (req, res)=>{
+
+    const { itemHash, itemInstanceId } = req.body;
+
+    const result = await pullFromPostmaster(req.session.token, req.session.storeMembershipData, req.params.characterId, itemHash, itemInstanceId);
     res.status(200).json(result);
 })
 
