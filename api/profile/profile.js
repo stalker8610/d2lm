@@ -282,9 +282,8 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         return responseJSON;
 
     } catch (err) {
-        result.err = err;
         console.log(`Error while pullFromPostmaster: `, err);
-        return result;
+        return { err };
     }
 }
 
