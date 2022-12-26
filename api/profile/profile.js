@@ -294,8 +294,6 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
 
 let profileRouter = express();
 
-profileRouter.use(express.json());
-
 profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', checkAuth, async (req, res) => {
     const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
     res.status(200).json(result);
@@ -317,7 +315,7 @@ profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, r
     res.status(200).json(result);
 })
 
-profileRouter.post('/character/:characterId/postmaster/take', checkAuth, async (req, res) => {
+profileRouter.post('/character/:characterId/postmaster/take', checkAuth, express.json(), async (req, res) => {
 
     const { itemHash, itemInstanceId } = req.body;
 
