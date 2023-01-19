@@ -96,7 +96,9 @@ async function getCharactersData(accessToken, storeMembershipData) {
                     id: character.characterId,
                     classType: character.classType,
                     light: character.light,
-                    emblemPath: character.emblemPath
+                    emblemPath: character.emblemPath,
+                    emblemBackgroundPath: character.emblemBackgroundPath,
+                    raceType: character.raceType,
                 })
             }
 
@@ -270,6 +272,7 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         itemId,
         characterId,
         membershipType: storeMembershipData.storeMembershipType,
+        stackSize: 1,
     }
 
     try {
