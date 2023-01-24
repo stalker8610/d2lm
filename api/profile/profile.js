@@ -127,6 +127,10 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
         }
 
         let responseJSON = await response.json();
+        if (responseJSON.ErrorCode) {
+            return { err: responseJSON.Message};
+        }
+
         let equipmentData = responseJSON.Response.equipment.data.items; //array of items
 
         let itemHashSet = new Set();
@@ -209,6 +213,10 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         }
 
         let responseJSON = await response.json();
+        if (responseJSON.ErrorCode) {
+            return { err: responseJSON.Message};
+        }
+
         let equipmentData = responseJSON.Response.inventory.data.items.filter((item) => (item.bucketHash == bucketHash)); //array of items
 
         let itemHashSet = new Set();
@@ -286,6 +294,10 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         }
 
         let responseJSON = await response.json();
+        if (responseJSON.ErrorCode) {
+            return { err: responseJSON.Message};
+        }
+        
         return responseJSON;
 
     } catch (err) {
