@@ -297,7 +297,7 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         if (responseJSON.ErrorCode) {
             return { err: responseJSON.Message};
         }
-        
+
         return responseJSON;
 
     } catch (err) {
@@ -311,7 +311,11 @@ let profileRouter = express();
 
 profileRouter.get('/character/:characterId/equipment/bucket/:bucketHash', checkAuth, async (req, res) => {
     const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, req.params.bucketHash);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({ error: result.err });
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, res) => {
@@ -327,7 +331,11 @@ profileRouter.get('/character/:characterId/postmaster', checkAuth, async (req, r
 
     /* const postmasterBucketHash = '215593132'; */
     const result = await getBucketEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId, postmasterBucketHash.hash);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({ error: result.err });
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 profileRouter.post('/character/:characterId/postmaster/take', checkAuth, express.json(), async (req, res) => {
@@ -335,12 +343,20 @@ profileRouter.post('/character/:characterId/postmaster/take', checkAuth, express
     const { itemHash, itemInstanceId } = req.body;
 
     const result = await pullFromPostmaster(req.session.token, req.session.storeMembershipData, req.params.characterId, itemHash, itemInstanceId);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({ error: result.err });
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 profileRouter.get('/character/:characterId/equipment', checkAuth, async (req, res) => {
     const result = await getEquipmentData(req.session.token, req.session.storeMembershipData, req.params.characterId);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({ error: result.err });
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 profileRouter.get('/', checkAuth, async (req, res) => {

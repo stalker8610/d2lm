@@ -19,6 +19,9 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         }
 
         let responseJSON = await response.json();
+        if (responseJSON.ErrorCode) {
+            return { err: responseJSON.Message};
+        }
 
         result.characterId = responseJSON.Response.characterId;
         result.itemHash = responseJSON.Response.item.data.itemHash;
@@ -123,6 +126,9 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
         }
 
         let responseJSON = await response.json();
+        if (responseJSON.ErrorCode) {
+            return { err: responseJSON.Message};
+        }
 
         return responseJSON;
 
@@ -135,12 +141,20 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
 
 itemsRouter.get('/:itemId/transfer', checkAuth, async (req, res) => {
     const result = await transferItem(req.session.token, req.session.storeMembershipData, req.params.itemId);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({error: result.err});
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 itemsRouter.get('/:itemId', checkAuth, async (req, res) => {
     const result = await getItemData(req.session.token, req.session.storeMembershipData, req.params.itemId);
-    res.status(200).json(result);
+    if (result.err) {
+        res.status(200).json({error: result.err});
+    } else {
+        res.status(200).json(result);
+    }
 })
 
 export { itemsRouter }
