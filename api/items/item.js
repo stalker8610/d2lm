@@ -19,7 +19,7 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode) {
+        if (responseJSON.ErrorCode!==1) {
             return { err: responseJSON.Message};
         }
 
@@ -126,7 +126,7 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode) {
+        if (responseJSON.ErrorCode!==1) {
             return { err: responseJSON.Message};
         }
 

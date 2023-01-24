@@ -127,7 +127,7 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode) {
+        if (responseJSON.ErrorCode!==1) {
             return { err: responseJSON.Message};
         }
 
@@ -213,7 +213,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode) {
+        if (responseJSON.ErrorCode!==1) {
             return { err: responseJSON.Message};
         }
 
@@ -294,7 +294,7 @@ async function pullFromPostmaster(accessToken, storeMembershipData, characterId,
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode) {
+        if (responseJSON.ErrorCode!==1) {
             return { err: responseJSON.Message};
         }
 
