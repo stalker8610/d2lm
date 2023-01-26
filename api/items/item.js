@@ -64,7 +64,9 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
                     {
                         _id: 0,
                         hash: 1,
-                        'displayProperties.name': 1
+                        'displayProperties.name': 1,
+                        statCategory: 1,
+                        index: 1,
                     }));
 
                 Object.entries(itemStatsData).forEach(([key, value]) => {
@@ -109,6 +111,7 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
         itemReferenceHash: itemData.itemReferenceHash,
         transferToVault,
         itemId: itemData.itemId,
+        stackSize: 1,
         characterId: itemData.characterId,
         membershipType: storeMembershipData.storeMembershipType
     }
