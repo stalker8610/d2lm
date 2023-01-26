@@ -68,17 +68,11 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
                         statCategory: 1,
                         index: 1,
                     });
-
-                /*  Object.entries(itemStatsData).forEach(([key, value]) => {
-                     Object.assign(value, { name: stats.find((el) => el.hash === value.statHash)?.displayProperties.name });
-                 }) 
-                 result.stats = Object.values(itemStatsData); */
+                
                  result.stats = stats.map(stData => ({
                     ...stData,
                     value: itemStatsData[stData.hash].value,
                 }));
-
-                
 
             }
         }
