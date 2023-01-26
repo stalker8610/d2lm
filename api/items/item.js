@@ -19,8 +19,8 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode!==1) {
-            return { err: responseJSON.Message};
+        if (responseJSON.ErrorCode !== 1) {
+            return { err: responseJSON.Message };
         }
 
         result.characterId = responseJSON.Response.characterId;
@@ -55,7 +55,7 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
             let itemStatsData = responseJSON.Response.stats.data.stats;
             if (Object.keys(itemStatsData).length > 0) {
 
-                let stats = (await getDataArrayFromDB('DestinyStatDefinition',
+                let stats = await getDataArrayFromDB('DestinyStatDefinition',
                     {
                         hash: {
                             $in: Object.keys(itemStatsData).map(el => Number(el))
@@ -67,11 +67,15 @@ async function getItemData(accessToken, storeMembershipData, itemId) {
                         'displayProperties.name': 1,
                         statCategory: 1,
                         index: 1,
-                    }));
+                    });
 
-                Object.entries(itemStatsData).forEach(([key, value]) => {
-                    Object.assign(value, { name: stats.find((el) => el.hash === value.statHash)?.displayProperties.name });
-                })
+                /*  Object.entries(itemStatsData).forEach(([key, value]) => {
+                     Object.assign(value, { name: stats.find((el) => el.hash === value.statHash)?.displayProperties.name });
+                 }) */
+                stats.map(stData => ({
+                    ...stData,
+                    value: itemStatsData.find(el => el.statHash === stData.hash).value,
+                }));
 
                 result.stats = Object.values(itemStatsData);
 
@@ -129,8 +133,8 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
         }
 
         let responseJSON = await response.json();
-        if (responseJSON.ErrorCode!==1) {
-            return { err: responseJSON.Message};
+        if (responseJSON.ErrorCode !== 1) {
+            return { err: responseJSON.Message };
         }
 
         return responseJSON;
@@ -145,7 +149,7 @@ async function transferItem(accessToken, storeMembershipData, itemData, transfer
 itemsRouter.get('/:itemId/transfer', checkAuth, async (req, res) => {
     const result = await transferItem(req.session.token, req.session.storeMembershipData, req.params.itemId);
     if (result.err) {
-        res.status(200).json({error: result.err});
+        res.status(200).json({ error: result.err });
     } else {
         res.status(200).json(result);
     }
@@ -154,7 +158,7 @@ itemsRouter.get('/:itemId/transfer', checkAuth, async (req, res) => {
 itemsRouter.get('/:itemId', checkAuth, async (req, res) => {
     const result = await getItemData(req.session.token, req.session.storeMembershipData, req.params.itemId);
     if (result.err) {
-        res.status(200).json({error: result.err});
+        res.status(200).json({ error: result.err });
     } else {
         res.status(200).json(result);
     }
