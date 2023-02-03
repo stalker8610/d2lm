@@ -202,7 +202,11 @@ async function getEquipmentData(accessToken, storeMembershipData, characterId) {
 
 async function getBucketEquipmentData(accessToken, storeMembershipData, characterId, bucketHash) {
 
-    let result = [];
+    let result = {
+        items: [],
+        bucketDisplayProperties: {},
+    }
+
     const URL = `/Destiny2/${storeMembershipData.storeMembershipType}/Profile/${storeMembershipData.storeMembershipId}/Character/${characterId}?components=CharacterInventories`;
     const reqOptions = prepareApiRequest(URL, accessToken);
 
@@ -220,9 +224,9 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
         let equipmentData = responseJSON.Response.inventory.data.items.filter((item) => (item.bucketHash == bucketHash)); //array of items
 
         let itemHashSet = new Set();
-
+        
         equipmentData.forEach((el) => {
-            result.push(
+            result.items.push(
                 {
                     itemHash: el.itemHash,
                     itemInstanceId: el.itemInstanceId,
@@ -254,7 +258,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
                 });
 
 
-            result.forEach((el) => {
+            result.items.forEach((el) => {
                 el.data = itemHashArray.find((item) => item.hash === el.itemHash);
             });
 
