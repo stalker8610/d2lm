@@ -260,7 +260,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 
         }
 
-        const [{bucketDisplayProperties}] = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
+        const [{displayProperties}] = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
         {
             hash: +bucketHash
         },
@@ -269,7 +269,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
             displayProperties: 1
         });
 
-        result.bucketDisplayProperties = bucketDisplayProperties;
+        result.bucketDisplayProperties = displayProperties;
 
         return result;
 
