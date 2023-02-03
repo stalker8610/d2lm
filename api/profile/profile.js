@@ -262,7 +262,7 @@ async function getBucketEquipmentData(accessToken, storeMembershipData, characte
 
         const bucketDisplayProperties = await getDataArrayFromDB('DestinyInventoryBucketDefinition',
         {
-            hash: bucketHash
+            hash: +bucketHash
         },
         {
             _id: 0,
