@@ -1,6 +1,4 @@
-import { resolveSoa } from 'dns';
 import express from 'express';
-import { rmSync } from 'fs';
 import fetch from 'node-fetch';
 
 var authRouter = express();
